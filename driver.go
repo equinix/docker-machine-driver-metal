@@ -3,7 +3,6 @@ package packet
 import (
 	"fmt"
 	"io/ioutil"
-	"net"
 	"path/filepath"
 	"strings"
 	"time"
@@ -21,7 +20,35 @@ const (
 	consumerToken   = "24e70949af5ecd17fe8e867b335fc88e7de8bd4ad617c0403d8769a376ddea72"
 )
 
-func GetCreateFlags() []mcnflag.Flag {
+var _ drivers.Driver = &Driver{}
+
+type Driver struct {
+	drivers.BaseDriver
+	ApiKey          string
+	ProjectID       string
+	Plan            string
+	Facility        string
+	OperatingSystem string
+	BillingCycle    string
+	DeviceID        string
+	UserData        string
+	Tags            []string
+	CaCertPath      string
+	SSHKeyID        string
+}
+
+// NewDriver is a backward compatible Driver factory method.  Using
+// new(packet.Driver) is preferred.
+func NewDriver(hostName, storePath string) Driver {
+	return Driver{
+		BaseDriver: drivers.BaseDriver{
+			MachineName: hostName,
+			StorePath:   storePath,
+		},
+	}
+}
+
+func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 	return []mcnflag.Flag{
 		mcnflag.StringFlag{
 			Name:   "packet-api-key",
@@ -35,7 +62,7 @@ func GetCreateFlags() []mcnflag.Flag {
 		},
 		mcnflag.StringFlag{
 			Name:   "packet-os",
-			Usage:  fmt.Sprintf("Packet OS, possible values are: %v", strings.Join(getOsFlavors(), ", ")),
+			Usage:  fmt.Sprintf("Packet OS, possible values are: %v", strings.Join(d.getOsFlavors(), ", ")),
 			Value:  "ubuntu_14_04",
 			EnvVar: "PACKET_OS",
 		},
@@ -60,42 +87,6 @@ func GetCreateFlags() []mcnflag.Flag {
 	}
 }
 
-func getOsFlavors() []string {
-	return []string{"ubuntu_14_04"}
-}
-
-func NewDriver(machineName string, storePath string, caCert string, privateKey string) Driver {
-	return Driver{
-		BaseDriver: &drivers.BaseDriver{
-			MachineName: machineName,
-			StorePath:   storePath,
-		},
-		CaCertPath:     caCert,
-		PrivateKeyPath: privateKey,
-	}
-}
-
-type Driver struct {
-	*drivers.BaseDriver
-	ApiKey          string
-	ProjectID       string
-	Plan            string
-	Facility        string
-	OperatingSystem string
-	BillingCycle    string
-	MachineName     string
-	DeviceID        string
-	UserData        string
-	Tags            []string
-	IPAddress       string
-	CaCertPath      string
-	PrivateKeyPath  string
-	SSHKeyID        string
-	SSHUser         string
-	SSHPort         int
-	StorePath       string
-}
-
 func (d *Driver) DriverName() string {
 	return "packet"
 }
@@ -103,8 +94,6 @@ func (d *Driver) DriverName() string {
 func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	if strings.Contains(flags.String("packet-os"), "coreos") {
 		d.SSHUser = "core"
-	} else {
-		d.SSHUser = "root"
 	}
 
 	d.ApiKey = flags.String("packet-api-key")
@@ -124,37 +113,14 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	return nil
 }
 
-func (d *Driver) GetMachineName() string {
-	return d.MachineName
-}
-
 func (d *Driver) GetSSHHostname() (string, error) {
 	return d.GetIP()
 }
 
-func (d *Driver) GetSSHKeyPath() string {
-	return filepath.Join(d.StorePath, "id_rsa")
-}
-
-func (d *Driver) GetSSHPort() (int, error) {
-	if d.SSHPort == 0 {
-		d.SSHPort = 22
-	}
-
-	return d.SSHPort, nil
-}
-
-func (d *Driver) GetSSHUsername() string {
-	if d.SSHUser == "" {
-		d.SSHUser = "root"
-	}
-
-	return d.SSHUser
-}
-
 func (d *Driver) PreCreateCheck() error {
-	if !stringInSlice(d.OperatingSystem, getOsFlavors()) {
-		return fmt.Errorf("specified --packet-os not one of %v", strings.Join(getOsFlavors(), ", "))
+	flavors := d.getOsFlavors()
+	if !stringInSlice(d.OperatingSystem, flavors) {
+		return fmt.Errorf("specified --packet-os not one of %v", strings.Join(flavors, ", "))
 	}
 
 	client := d.getClient()
@@ -246,7 +212,7 @@ func (d *Driver) Create() error {
 	log.Debug("Provision time: %v.\n", time.Since(t0))
 
 	log.Debug("Waiting for SSH...")
-	if err := waitForTCP(fmt.Sprintf("%s:%d", d.IPAddress, 22)); err != nil {
+	if err := drivers.WaitForSSH(d); err != nil {
 		return err
 	}
 
@@ -351,6 +317,10 @@ func (d *Driver) getClient() *packngo.Client {
 	return packngo.NewClient(consumerToken, d.ApiKey)
 }
 
+func (d *Driver) getOsFlavors() []string {
+	return []string{"ubuntu_14_04"}
+}
+
 func (d *Driver) sshKeyPath() string {
 	return filepath.Join(d.StorePath, "id_rsa")
 }
@@ -366,17 +336,4 @@ func stringInSlice(a string, list []string) bool {
 		}
 	}
 	return false
-}
-
-func waitForTCP(addr string) error {
-	for {
-		log.Debugf("Testing TCP connection to: %s", addr)
-
-		c, err := net.DialTimeout("tcp", addr, 2*time.Second)
-		if err != nil {
-			continue
-		}
-		c.Close()
-		return nil
-	}
 }
