@@ -3,7 +3,6 @@ package packet
 import (
 	"fmt"
 	"io/ioutil"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -138,7 +137,7 @@ func (d *Driver) PreCreateCheck() error {
 }
 
 func (d *Driver) Create() error {
-	log.Infof("Creating SSH key...")
+	log.Info("Creating SSH key...")
 
 	key, err := d.createSSHKey()
 	if err != nil {
@@ -159,7 +158,7 @@ func (d *Driver) Create() error {
 		Tags:         d.Tags,
 	}
 
-	log.Infof("Provisioning Packet server...")
+	log.Info("Provisioning Packet server...")
 	newDevice, _, err := client.Devices.Create(createRequest)
 	if err != nil {
 		return err
@@ -191,7 +190,7 @@ func (d *Driver) Create() error {
 		newDevice.ID,
 		d.IPAddress)
 
-	log.Infof("Waiting for Provisioning...")
+	log.Info("Waiting for Provisioning...")
 	stage := float32(0)
 	for {
 		newDevice, _, err = client.Devices.Get(d.DeviceID)
@@ -200,16 +199,16 @@ func (d *Driver) Create() error {
 		}
 		if newDevice.State == "provisioning" && stage != newDevice.ProvisionPer {
 			stage = newDevice.ProvisionPer
-			log.Debug("Provisioning %v%% complete", newDevice.ProvisionPer)
+			log.Debugf("Provisioning %v%% complete", newDevice.ProvisionPer)
 		}
 		if newDevice.State == "active" {
-			log.Debug("Device State: %s", newDevice.State)
+			log.Debugf("Device State: %s", newDevice.State)
 			break
 		}
 		time.Sleep(10 * time.Second)
 	}
 
-	log.Debug("Provision time: %v.\n", time.Since(t0))
+	log.Debugf("Provision time: %v.", time.Since(t0))
 
 	log.Debug("Waiting for SSH...")
 	if err := drivers.WaitForSSH(d); err != nil {
@@ -220,11 +219,14 @@ func (d *Driver) Create() error {
 }
 
 func (d *Driver) createSSHKey() (*packngo.SSHKey, error) {
-	if err := ssh.GenerateSSHKey(d.sshKeyPath()); err != nil {
+	sshKeyPath := d.GetSSHKeyPath()
+	log.Debugf("Writing SSH Key to %s", sshKeyPath)
+
+	if err := ssh.GenerateSSHKey(sshKeyPath); err != nil {
 		return nil, err
 	}
 
-	publicKey, err := ioutil.ReadFile(d.publicSSHKeyPath())
+	publicKey, err := ioutil.ReadFile(sshKeyPath + ".pub")
 	if err != nil {
 		return nil, err
 	}
@@ -319,14 +321,6 @@ func (d *Driver) getClient() *packngo.Client {
 
 func (d *Driver) getOsFlavors() []string {
 	return []string{"ubuntu_14_04"}
-}
-
-func (d *Driver) sshKeyPath() string {
-	return filepath.Join(d.StorePath, "id_rsa")
-}
-
-func (d *Driver) publicSSHKeyPath() string {
-	return d.sshKeyPath() + ".pub"
 }
 
 func stringInSlice(a string, list []string) bool {

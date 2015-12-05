@@ -1,8 +1,8 @@
 default: build
 
-version := "v0.0.1"
-version_description := "Docker Machine Driver Plugin to provision on Packet"
-human_name := "Packet Driver"
+version := "v0.1.0"
+version_description := "Docker Machine Driver Plugin to Provision on Packet"
+human_name := "v0.1.0 - Docker Machine v0.5.1+"
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 current_dir := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
@@ -32,10 +32,19 @@ containerrelease:
 		make release
 
 clean:
-	rm bin/docker-machine*
+	rm -r bin/docker-machine*
 
 compile:
-	GOGC=off CGOENABLED=0 go build -ldflags "-s" -o bin/$(current_dir)$(BIN_SUFFIX) bin/main.go
+	GOGC=off CGOENABLED=0 go build -ldflags "-s" -o bin/$(current_dir)$(BIN_SUFFIX)/$(current_dir) bin/main.go
+
+pack:
+	find ./bin -type d -mindepth 1 -exec zip -r -j {}.zip {} \;
+
+checksums:
+	@for file in $(wildcard bin/*.zip); do \
+		echo "sha256 $$(basename $$file)   $$(openssl dgst -sha256 < $$file)"; \
+		echo "md5 $$(basename $$file)      $$(openssl dgst -md5 < $$file)"; \
+	done
 
 print-success:
 	@echo
@@ -54,7 +63,7 @@ cross:
 	wait
 
 install:
-	cp bin/$(current_dir) /usr/local/bin/$(current_dir)
+	cp bin/$(current_dir)/$(current_dir) /usr/local/bin/$(current_dir)
 
 cleanrelease:
 	github-release delete \
@@ -64,7 +73,7 @@ cleanrelease:
 	git tag -d $(version)
 	git push origin :refs/tags/$(version)
 
-release: cross
+release: cross pack checksums
 	git tag $(version)
 	git push --tags
 	github-release release \
@@ -79,7 +88,7 @@ release: cross
 				--user $(github_user) \
 				--repo $(current_dir) \
 				--tag $(version) \
-				--name bin/$(current_dir)_$$os-$$arch \
-				--file bin/$(current_dir)_$$os-$$arch; \
+				--name $(current_dir)_$$os-$$arch.zip \
+				--file bin/$(current_dir)_$$os-$$arch.zip; \
 		done; \
 	done
