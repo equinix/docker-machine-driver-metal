@@ -292,11 +292,15 @@ func (d *Driver) Remove() error {
 	client := d.getClient()
 
 	if _, err := client.SSHKeys.Delete(d.SSHKeyID); err != nil {
-		return err
+		if er, ok := err.(*packngo.ErrorResponse); !ok || er.Response.StatusCode != 404 {
+			return err
+		}
 	}
 
 	if _, err := client.Devices.Delete(d.DeviceID); err != nil {
-		return err
+		if er, ok := err.(*packngo.ErrorResponse); !ok || er.Response.StatusCode != 404 {
+			return err
+		}
 	}
 	return nil
 }
