@@ -174,7 +174,7 @@ func (d *Driver) Create() error {
 		}
 
 		for _, ip := range newDevice.Network {
-			if ip.Public && ip.Family == 4 {
+			if ip.Public && ip.AddressFamily == 4 {
 				d.IPAddress = ip.Address
 			}
 		}
