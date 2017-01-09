@@ -94,6 +94,9 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	if strings.Contains(flags.String("packet-os"), "coreos") {
 		d.SSHUser = "core"
 	}
+	if strings.Contains(flags.String("packet-os"), "rancher") {
+		d.SSHUser = "rancher"
+	}
 
 	d.ApiKey = flags.String("packet-api-key")
 	d.ProjectID = flags.String("packet-project-id")
