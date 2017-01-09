@@ -22,7 +22,7 @@ const (
 var _ drivers.Driver = &Driver{}
 
 type Driver struct {
-	drivers.BaseDriver
+	*drivers.BaseDriver
 	ApiKey          string
 	ProjectID       string
 	Plan            string
@@ -38,9 +38,9 @@ type Driver struct {
 
 // NewDriver is a backward compatible Driver factory method.  Using
 // new(packet.Driver) is preferred.
-func NewDriver(hostName, storePath string) Driver {
-	return Driver{
-		BaseDriver: drivers.BaseDriver{
+func NewDriver(hostName, storePath string) *Driver {
+	return &Driver{
+		BaseDriver: &drivers.BaseDriver{
 			MachineName: hostName,
 			StorePath:   storePath,
 		},
