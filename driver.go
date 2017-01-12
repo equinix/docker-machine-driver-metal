@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"strings"
 	"time"
+	"os"
 
 	"github.com/docker/machine/libmachine/drivers"
 	"github.com/docker/machine/libmachine/log"
@@ -34,6 +35,7 @@ type Driver struct {
 	Tags            []string
 	CaCertPath      string
 	SSHKeyID        string
+	UserDataFile    string
 }
 
 // NewDriver is a backward compatible Driver factory method.  Using
@@ -83,6 +85,11 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 			Value:  "hourly",
 			EnvVar: "PACKET_BILLING_CYCLE",
 		},
+		mcnflag.StringFlag{
+			Name:   "packet-userdata",
+			Usage:  "Path to file with cloud-init user-data",
+			EnvVar: "PACKET_USERDATA",
+		},
 	}
 }
 
@@ -104,6 +111,7 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	d.Facility = flags.String("packet-facility-code")
 	d.Plan = flags.String("packet-plan")
 	d.BillingCycle = flags.String("packet-billing-cycle")
+	d.UserDataFile = flags.String("packet-userdata")
 
 	if d.ApiKey == "" {
 		return fmt.Errorf("packet driver requires the --packet-api-key option")
@@ -120,6 +128,12 @@ func (d *Driver) GetSSHHostname() (string, error) {
 }
 
 func (d *Driver) PreCreateCheck() error {
+	if d.UserDataFile != "" {
+		if _, err := os.Stat(d.UserDataFile); os.IsNotExist(err) {
+			return fmt.Errorf("user-data file %s could not be found", d.UserDataFile)
+		}
+	}
+
 	flavors := d.getOsFlavors()
 	if !stringInSlice(d.OperatingSystem, flavors) {
 		return fmt.Errorf("specified --packet-os not one of %v", strings.Join(flavors, ", "))
@@ -140,6 +154,15 @@ func (d *Driver) PreCreateCheck() error {
 }
 
 func (d *Driver) Create() error {
+	var userdata string
+	if d.UserDataFile != "" {
+		buf, err := ioutil.ReadFile(d.UserDataFile)
+		if err != nil {
+			return err
+		}
+		userdata = string(buf)
+	}
+
 	log.Info("Creating SSH key...")
 
 	key, err := d.createSSHKey()
@@ -157,7 +180,7 @@ func (d *Driver) Create() error {
 		OS:           d.OperatingSystem,
 		BillingCycle: d.BillingCycle,
 		ProjectID:    d.ProjectID,
-		UserData:     d.UserData,
+		UserData:     userdata,
 		Tags:         d.Tags,
 	}
 
