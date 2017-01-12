@@ -74,7 +74,7 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 		mcnflag.StringFlag{
 			Name:   "packet-plan",
 			Usage:  "Packet Server Plan",
-			Value:  "baremetal_1",
+			Value:  "baremetal_0",
 			EnvVar: "PACKET_PLAN",
 		},
 		mcnflag.StringFlag{
