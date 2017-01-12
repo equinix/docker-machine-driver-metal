@@ -94,6 +94,9 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	if strings.Contains(flags.String("packet-os"), "coreos") {
 		d.SSHUser = "core"
 	}
+	if strings.Contains(flags.String("packet-os"), "rancher") {
+		d.SSHUser = "rancher"
+	}
 
 	d.ApiKey = flags.String("packet-api-key")
 	d.ProjectID = flags.String("packet-project-id")
@@ -324,7 +327,7 @@ func (d *Driver) getClient() *packngo.Client {
 }
 
 func (d *Driver) getOsFlavors() []string {
-	return []string{"ubuntu_14_04"}
+	return []string{"centos_7", "coreos_alpha", "coreos_beta", "coreos_stable", "debian_8", "freebsd_10_8", "rancher", "ubuntu_14_04", "ubuntu_16_04"}
 }
 
 func stringInSlice(a string, list []string) bool {
