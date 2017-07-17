@@ -64,7 +64,7 @@ Pre-reqs: `docker-machine` and `make`
 * Build and install the driver:
 
 ```
-$ cd $GOPATH/github.com/packethost/docker-machine-driver-packet
+$ cd $GOPATH/src/github.com/packethost/docker-machine-driver-packet
 $ make 
 $ sudo make install
 ```
