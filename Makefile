@@ -75,7 +75,7 @@ cleanrelease:
 	git push origin :refs/tags/$(version)
 
 release: cross pack checksums
-	git tag $(version)
+	git tag -m $(version) $(version)
 	git push --tags
 	github-release release \
 		--user $(github_user) \
