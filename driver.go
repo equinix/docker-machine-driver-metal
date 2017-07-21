@@ -64,7 +64,7 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 		mcnflag.StringFlag{
 			Name:   "packet-os",
 			Usage:  fmt.Sprintf("Packet OS, possible values are: %v", strings.Join(d.getOsFlavors(), ", ")),
-			Value:  "ubuntu_14_04",
+			Value:  "ubuntu_16_04",
 			EnvVar: "PACKET_OS",
 		},
 		mcnflag.StringFlag{
