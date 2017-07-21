@@ -3,9 +3,9 @@ package packet
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 	"time"
-	"os"
 
 	"github.com/docker/machine/libmachine/drivers"
 	"github.com/docker/machine/libmachine/log"
@@ -350,7 +350,17 @@ func (d *Driver) getClient() *packngo.Client {
 }
 
 func (d *Driver) getOsFlavors() []string {
-	return []string{"centos_7", "coreos_alpha", "coreos_beta", "coreos_stable", "debian_8", "freebsd_10_8", "rancher", "ubuntu_14_04", "ubuntu_16_04"}
+	return []string{
+		"centos_7",
+		"coreos_alpha",
+		"coreos_beta",
+		"coreos_stable",
+		"debian_8",
+		"freebsd_10_8",
+		"rancher",
+		"ubuntu_14_04",
+		"ubuntu_16_04",
+	}
 }
 
 func stringInSlice(a string, list []string) bool {
