@@ -360,6 +360,7 @@ func (d *Driver) getOsFlavors() []string {
 		"rancher",
 		"ubuntu_14_04",
 		"ubuntu_16_04",
+		"ubuntu_17_04",
 	}
 }
 
