@@ -1,8 +1,9 @@
 default: build
 
-version := "v0.1.3"
+version := v0.1.3
 version_description := "Docker Machine Driver Plugin to Provision on Packet"
-human_name := "v0.1.3 - Docker Machine v0.8.2+"
+human_name := "$(version) - Docker Machine v0.8.2+"
+version := "$(version)"
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 current_dir := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
