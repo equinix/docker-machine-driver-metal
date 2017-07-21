@@ -1,8 +1,9 @@
-FROM golang:1.5
+FROM golang:1.8.3
 
 ENV REPO github.com/packethost/docker-machine-driver-packet
 
-RUN go get github.com/aktau/github-release \
+RUN go get -v \
+	github.com/aktau/github-release \
 	github.com/packethost/packngo \
 	github.com/docker/machine \
 	golang.org/x/net/context \
