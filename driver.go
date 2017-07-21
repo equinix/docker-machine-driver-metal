@@ -3,9 +3,9 @@ package packet
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 	"time"
-	"os"
 
 	"github.com/docker/machine/libmachine/drivers"
 	"github.com/docker/machine/libmachine/log"
@@ -64,7 +64,7 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 		mcnflag.StringFlag{
 			Name:   "packet-os",
 			Usage:  fmt.Sprintf("Packet OS, possible values are: %v", strings.Join(d.getOsFlavors(), ", ")),
-			Value:  "ubuntu_14_04",
+			Value:  "ubuntu_16_04",
 			EnvVar: "PACKET_OS",
 		},
 		mcnflag.StringFlag{
@@ -350,7 +350,18 @@ func (d *Driver) getClient() *packngo.Client {
 }
 
 func (d *Driver) getOsFlavors() []string {
-	return []string{"centos_7", "coreos_alpha", "coreos_beta", "coreos_stable", "debian_8", "freebsd_10_8", "rancher", "ubuntu_14_04", "ubuntu_16_04"}
+	return []string{
+		"centos_7",
+		"coreos_alpha",
+		"coreos_beta",
+		"coreos_stable",
+		"debian_8",
+		"freebsd_10_8",
+		"rancher",
+		"ubuntu_14_04",
+		"ubuntu_16_04",
+		"ubuntu_17_04",
+	}
 }
 
 func stringInSlice(a string, list []string) bool {
