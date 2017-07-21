@@ -39,7 +39,7 @@ compile:
 	GOGC=off CGOENABLED=0 go build -ldflags "-s" -o bin/$(current_dir)$(BIN_SUFFIX)/$(current_dir) bin/main.go
 
 pack:
-	find ./bin -type d -mindepth 1 -exec zip -r -j {}.zip {} \;
+	find ./bin -mindepth 1 -type d -exec zip -r -j {}.zip {} \;
 
 checksums:
 	@for file in $(wildcard bin/*.zip); do \
