@@ -113,6 +113,9 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	d.UserDataFile = flags.String("packet-userdata")
 
 	d.Plan = flags.String("packet-plan")
+	if strings.HasPrefix(strings.ToLower(d.Plan), "type") {
+		d.Plan = "baremetal_" + strings.ToLower(d.Plan[len("type"):])
+	}
 	switch d.Plan[len("baremetal_"):] {
 	case "0", "1", "2", "2a", "3", "s":
 	default:
