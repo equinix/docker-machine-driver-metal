@@ -80,9 +80,13 @@ cleanrelease:
 	git tag -d $(version)
 	git push origin :refs/tags/$(version)
 
-release: pack checksums
-	git tag -m $(version) $(version)
-	git push --tags
+tag:
+	if ! git tag | grep -q $(version); then \
+		git tag -m $(version) $(version); \
+		git push --tags; \
+	fi
+
+release: tag pack checksums
 	github-release release \
 		--user $(github_user) \
 		--repo $(current_dir) \
