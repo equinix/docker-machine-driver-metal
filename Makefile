@@ -86,7 +86,13 @@ tag:
 		git push --tags; \
 	fi
 
-release: tag pack checksums
+checktoken:
+	@if [[ -z $$GITHUB_TOKEN ]]; then \
+		echo "GITHUB_TOKEN is not set, exiting" >&2; \
+		exit 1; \
+	fi
+
+release: checktoken tag pack checksums
 	github-release release \
 		--user $(github_user) \
 		--repo $(current_dir) \
