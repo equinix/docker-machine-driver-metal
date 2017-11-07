@@ -174,7 +174,7 @@ func (d *Driver) Create() error {
 
 	client := d.getClient()
 	createRequest := &packngo.DeviceCreateRequest{
-		HostName:     d.MachineName,
+		Hostname:     d.MachineName,
 		Plan:         d.Plan,
 		Facility:     d.Facility,
 		OS:           d.OperatingSystem,
