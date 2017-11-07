@@ -38,14 +38,20 @@ clean:
 compile:
 	GOGC=off CGOENABLED=0 go build -ldflags "-s" -o bin/$(current_dir)$(BIN_SUFFIX)/$(current_dir) bin/main.go
 
-pack:
+pack: cross
 	find ./bin -mindepth 1 -type d -exec zip -r -j {}.zip {} \;
 
-checksums:
-	@for file in $(wildcard bin/*.zip); do \
-		echo "sha256 $$(basename $$file)   $$(openssl dgst -sha256 < $$file)"; \
-		echo "md5 $$(basename $$file)      $$(openssl dgst -md5 < $$file)"; \
-	done
+checksums: pack
+	for file in $(shell find bin -type f -name '*.zip'); do \
+		( \
+		cd $$(dirname $$file); \
+		f=$$(basename $$file); \
+		b2sum     --tag $$f && \
+		sha256sum --tag $$f && \
+		sha512sum --tag $$f ; \
+		) \
+	done | sort >$@.tmp
+	@mv $@.tmp $@
 
 print-success:
 	@echo
@@ -74,7 +80,7 @@ cleanrelease:
 	git tag -d $(version)
 	git push origin :refs/tags/$(version)
 
-release: cross pack checksums
+release: pack checksums
 	git tag -m $(version) $(version)
 	git push --tags
 	github-release release \
