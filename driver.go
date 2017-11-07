@@ -109,9 +109,18 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	d.ProjectID = flags.String("packet-project-id")
 	d.OperatingSystem = flags.String("packet-os")
 	d.Facility = flags.String("packet-facility-code")
-	d.Plan = flags.String("packet-plan")
 	d.BillingCycle = flags.String("packet-billing-cycle")
 	d.UserDataFile = flags.String("packet-userdata")
+
+	d.Plan = flags.String("packet-plan")
+	if strings.HasPrefix(strings.ToLower(d.Plan), "type") {
+		d.Plan = "baremetal_" + strings.ToLower(d.Plan[len("type"):])
+	}
+	switch d.Plan[len("baremetal_"):] {
+	case "0", "1", "2", "2a", "3", "s":
+	default:
+		return fmt.Errorf("unknown plan")
+	}
 
 	if d.ApiKey == "" {
 		return fmt.Errorf("packet driver requires the --packet-api-key option")
