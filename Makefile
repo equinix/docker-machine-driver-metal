@@ -99,3 +99,9 @@ release: pack checksums
 				--file bin/$(current_dir)_$$os-$$arch.zip; \
 		done; \
 	done
+	github-release upload \
+		--user $(github_user) \
+		--repo $(current_dir) \
+		--tag $(version) \
+		--name checksums \
+		--file checksums
