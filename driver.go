@@ -355,7 +355,7 @@ func (d *Driver) GetDockerConfigDir() string {
 }
 
 func (d *Driver) getClient() *packngo.Client {
-	return packngo.NewClient(consumerToken, d.ApiKey, nil)
+	return packngo.NewClientWithAuth(consumerToken, d.ApiKey, nil)
 }
 
 func (d *Driver) getOsFlavors() []string {
