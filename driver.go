@@ -65,7 +65,7 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 		},
 		mcnflag.StringFlag{
 			Name:   "packet-os",
-			Usage:  fmt.Sprintf("Packet OS, possible values are: %v", strings.Join(d.getOsFlavors(), ", ")),
+			Usage:  "Packet OS",
 			Value:  "ubuntu_16_04",
 			EnvVar: "PACKET_OS",
 		},
@@ -145,7 +145,10 @@ func (d *Driver) PreCreateCheck() error {
 		}
 	}
 
-	flavors := d.getOsFlavors()
+	flavors, err := d.getOsFlavors()
+	if err != nil {
+		return err
+	}
 	if !stringInSlice(d.OperatingSystem, flavors) {
 		return fmt.Errorf("specified --packet-os not one of %v", strings.Join(flavors, ", "))
 	}
@@ -360,19 +363,26 @@ func (d *Driver) getClient() *packngo.Client {
 	return packngo.NewClientWithAuth(consumerToken, d.ApiKey, nil)
 }
 
-func (d *Driver) getOsFlavors() []string {
-	return []string{
-		"centos_7",
-		"coreos_alpha",
-		"coreos_beta",
-		"coreos_stable",
-		"debian_8",
-		"freebsd_10_8",
-		"rancher",
-		"ubuntu_14_04",
-		"ubuntu_16_04",
-		"ubuntu_17_04",
+func (d *Driver) getOsFlavors() ([]string, error) {
+	operatingSystems, _, err := d.getClient().OperatingSystems.List()
+	if err != nil {
+		return nil, err
 	}
+
+	supportedDistros := []string{
+		"centos",
+		"coreos",
+		"debian",
+		"rancher",
+		"ubuntu",
+	}
+	flavors := make([]string, 0, len(operatingSystems))
+	for _, flavor := range operatingSystems {
+		if stringInSlice(flavor.Distro, supportedDistros) {
+			flavors = append(flavors, flavor.Slug)
+		}
+	}
+	return flavors, nil
 }
 
 func stringInSlice(a string, list []string) bool {
