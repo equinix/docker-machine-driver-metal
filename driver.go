@@ -373,6 +373,7 @@ func (d *Driver) getOsFlavors() ([]string, error) {
 		"centos",
 		"coreos",
 		"debian",
+		"opensuse",
 		"rancher",
 		"ubuntu",
 	}
