@@ -119,7 +119,7 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 		d.Plan = "baremetal_" + strings.ToLower(d.Plan[len("type"):])
 	}
 	switch d.Plan[len("baremetal_"):] {
-	case "0", "1", "2", "2a", "3", "s":
+	case "0", "1", "1e", "2", "2a", "3", "s":
 	default:
 		return fmt.Errorf("unknown plan")
 	}
