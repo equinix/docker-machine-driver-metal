@@ -153,18 +153,16 @@ func (d *Driver) PreCreateCheck() error {
 		return fmt.Errorf("specified --packet-os not one of %v", strings.Join(flavors, ", "))
 	}
 
-	client := d.getClient()
-	facilities, _, err := client.Facilities.List()
+	validFacilities, err := d.getFacilities()
 	if err != nil {
 		return err
 	}
-	for _, facility := range facilities {
-		if facility.Code == d.Facility {
-			return nil
-		}
+	if !stringInSlice(d.Facility, validFacilities) {
+		return fmt.Errorf("a specified facility is not one of %v",
+			strings.Join(validFacilities, ", "))
 	}
 
-	return fmt.Errorf("packet requires a valid facility")
+	return nil
 }
 
 func (d *Driver) Create() error {
