@@ -386,6 +386,19 @@ func (d *Driver) getOsFlavors() ([]string, error) {
 	return flavors, nil
 }
 
+func (d *Driver) getFacilities() ([]string, error) {
+	facilities, _, err := d.getClient().Facilities.List()
+	if err != nil {
+		return nil, err
+	}
+
+	list := make([]string, 0, len(facilities))
+	for _, facility := range facilities {
+		list = append(list, facility.Code)
+	}
+	return list, nil
+}
+
 func stringInSlice(a string, list []string) bool {
 	for _, b := range list {
 		if b == a {
