@@ -1,4 +1,4 @@
-FROM golang:1.8.3
+FROM golang:1.11.0
 
 ENV REPO github.com/packethost/docker-machine-driver-packet
 

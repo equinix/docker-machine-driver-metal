@@ -57,14 +57,15 @@ At this point you can now `docker-machine env sloth` and then start using your D
 
 Pre-reqs: `docker-machine` and `make`
 
-* Install the Golang SDK [https://golang.org/dl/](https://golang.org/dl/)
+* Install the Golang SDK [https://golang.org/dl/](https://golang.org/dl/) (at least 1.11 required for [modules](https://github.com/golang/go/wiki/Modules) support
 
-* Download the source-code with `go get -u github.com/packethost/docker-machine-driver-packet`
+* Download the source-code with
+  `git clone http://github.com/packethost/docker-machine-driver-packet.git`
 
 * Build and install the driver:
 
 ```
-$ cd $GOPATH/src/github.com/packethost/docker-machine-driver-packet
+$ cd docker-machine-driver-packet
 $ make 
 $ sudo make install
 ```
