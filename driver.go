@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -38,6 +39,9 @@ type Driver struct {
 	CaCertPath      string
 	SSHKeyID        string
 	UserDataFile    string
+	SpotInstance    bool
+	SpotPriceMax    float64
+	TerminationTime *packngo.Timestamp
 }
 
 // NewDriver is a backward compatible Driver factory method.  Using
@@ -92,6 +96,21 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 			Usage:  "Path to file with cloud-init user-data",
 			EnvVar: "PACKET_USERDATA",
 		},
+		mcnflag.BoolFlag{
+			Name:   "packet-spot-instance",
+			Usage:  "Request a Packet Spot Instance",
+			EnvVar: "PACKET_SPOT_INSTANCE",
+		},
+		mcnflag.StringFlag{
+			Name:   "packet-spot-price-max",
+			Usage:  "The maximum Packet Spot Price",
+			EnvVar: "PACKET_SPOT_PRICE_MAX",
+		},
+		mcnflag.StringFlag{
+			Name:   "packet-termination-time",
+			Usage:  "The Packet Instance Termination Time",
+			EnvVar: "PACKET_TERMINATION_TIME",
+		},
 	}
 }
 
@@ -115,13 +134,32 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	d.UserDataFile = flags.String("packet-userdata")
 
 	d.Plan = flags.String("packet-plan")
-	if strings.HasPrefix(strings.ToLower(d.Plan), "type") {
-		d.Plan = "baremetal_" + strings.ToLower(d.Plan[len("type"):])
-	}
-	switch d.Plan[len("baremetal_"):] {
-	case "0", "1", "2", "2a", "3", "s":
-	default:
-		return fmt.Errorf("unknown plan")
+
+	d.SpotInstance = flags.Bool("packet-spot-instance")
+
+	if d.SpotInstance == true {
+		SpotPriceMax := flags.String("packet-spot-price-max")
+		if SpotPriceMax == "" {
+			d.SpotPriceMax = -1
+		} else {
+			SpotPriceMax, err := strconv.ParseFloat(SpotPriceMax, 64)
+			if err != nil {
+				return err
+			}
+			d.SpotPriceMax = SpotPriceMax
+		}
+
+		TerminationTime := flags.String("packet-termination-time")
+		if TerminationTime == "" {
+			d.TerminationTime = nil
+		} else {
+			layout := "2006-01-02T15:04:05.000Z"
+			TerminationTime, err := time.Parse(layout, TerminationTime)
+			if err != nil {
+				return err
+			}
+			d.TerminationTime.Time = TerminationTime
+		}
 	}
 
 	if d.ApiKey == "" {
@@ -151,6 +189,10 @@ func (d *Driver) PreCreateCheck() error {
 	}
 	if !stringInSlice(d.OperatingSystem, flavors) {
 		return fmt.Errorf("specified --packet-os not one of %v", strings.Join(flavors, ", "))
+	}
+
+	if d.Facility == "any" {
+		return nil
 	}
 
 	client := d.getClient()
@@ -196,6 +238,8 @@ func (d *Driver) Create() error {
 		ProjectID:    d.ProjectID,
 		UserData:     userdata,
 		Tags:         d.Tags,
+		SpotInstance: d.SpotInstance,
+		SpotPriceMax: -1,
 	}
 
 	log.Info("Provisioning Packet server...")
