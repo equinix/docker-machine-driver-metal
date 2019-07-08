@@ -21,7 +21,7 @@ This creates the following:
 * in the EWR region (NJ)
 * with Ubuntu 16.04
 * in project $PROJECT
-* Using $API_KEY - [get yours from the Portal](https://app.packet.net/portal#/api-keys)
+* Using account $API_KEY - [get yours from the Portal](https://app.packet.net/users/0/api-keys)
 
 ```
 $ docker-machine create sloth \
