@@ -36,7 +36,7 @@ clean:
 	rm -r bin/docker-machine*
 
 compile:
-	GOGC=off CGOENABLED=0 go build -ldflags "-s" -o bin/$(current_dir)$(BIN_SUFFIX)/$(current_dir) bin/main.go
+	GO111MODULE=on GOGC=off CGOENABLED=0 go build -ldflags "-s" -o bin/$(current_dir)$(BIN_SUFFIX)/$(current_dir) ./bin/...
 
 pack: cross
 	find ./bin -mindepth 1 -type d -exec zip -r -j {}.zip {} \;
