@@ -236,8 +236,6 @@ func (d *Driver) Create() error {
 	d.SSHKeyID = key.ID
 
 	hardwareReservationId := ""
-	plan := d.Plan
-
 	//check if hardware reservation requested
 	if d.HardwareReserverationID != "" {
 		hardwareReservationId = d.HardwareReserverationID
@@ -246,7 +244,7 @@ func (d *Driver) Create() error {
 	client := d.getClient()
 	createRequest := &packngo.DeviceCreateRequest{
 		Hostname:              d.MachineName,
-		Plan:                  plan,
+		Plan:                  d.Plan,
 		HardwareReservationID: hardwareReservationId,
 		Facility:              d.Facility,
 		OS:                    d.OperatingSystem,
