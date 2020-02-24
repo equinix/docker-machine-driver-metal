@@ -27,21 +27,22 @@ var _ drivers.Driver = &Driver{}
 
 type Driver struct {
 	*drivers.BaseDriver
-	ApiKey          string
-	ProjectID       string
-	Plan            string
-	Facility        string
-	OperatingSystem string
-	BillingCycle    string
-	DeviceID        string
-	UserData        string
-	Tags            []string
-	CaCertPath      string
-	SSHKeyID        string
-	UserDataFile    string
-	SpotInstance    bool
-	SpotPriceMax    float64
-	TerminationTime *packngo.Timestamp
+	ApiKey                  string
+	ProjectID               string
+	Plan                    string
+	HardwareReserverationID string
+	Facility                string
+	OperatingSystem         string
+	BillingCycle            string
+	DeviceID                string
+	UserData                string
+	Tags                    []string
+	CaCertPath              string
+	SSHKeyID                string
+	UserDataFile            string
+	SpotInstance            bool
+	SpotPriceMax            float64
+	TerminationTime         *packngo.Timestamp
 }
 
 // NewDriver is a backward compatible Driver factory method.  Using
@@ -84,6 +85,11 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 			Usage:  "Packet Server Plan",
 			Value:  "baremetal_0",
 			EnvVar: "PACKET_PLAN",
+		},
+		mcnflag.StringFlag{
+			Name:   "packet-hw-reservation-id",
+			Usage:  "Packet Reserved hardware ID",
+			EnvVar: "PACKET_HW_ID",
 		},
 		mcnflag.StringFlag{
 			Name:   "packet-billing-cycle",
@@ -134,6 +140,7 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	d.UserDataFile = flags.String("packet-userdata")
 
 	d.Plan = flags.String("packet-plan")
+	d.HardwareReserverationID = flags.String("packet-hw-reservation-id")
 
 	d.SpotInstance = flags.Bool("packet-spot-instance")
 
@@ -228,18 +235,25 @@ func (d *Driver) Create() error {
 
 	d.SSHKeyID = key.ID
 
+	hardwareReservationId := ""
+	//check if hardware reservation requested
+	if d.HardwareReserverationID != "" {
+		hardwareReservationId = d.HardwareReserverationID
+	}
+
 	client := d.getClient()
 	createRequest := &packngo.DeviceCreateRequest{
-		Hostname:     d.MachineName,
-		Plan:         d.Plan,
-		Facility:     d.Facility,
-		OS:           d.OperatingSystem,
-		BillingCycle: d.BillingCycle,
-		ProjectID:    d.ProjectID,
-		UserData:     userdata,
-		Tags:         d.Tags,
-		SpotInstance: d.SpotInstance,
-		SpotPriceMax: -1,
+		Hostname:              d.MachineName,
+		Plan:                  d.Plan,
+		HardwareReservationID: hardwareReservationId,
+		Facility:              d.Facility,
+		OS:                    d.OperatingSystem,
+		BillingCycle:          d.BillingCycle,
+		ProjectID:             d.ProjectID,
+		UserData:              userdata,
+		Tags:                  d.Tags,
+		SpotInstance:          d.SpotInstance,
+		SpotPriceMax:          -1,
 	}
 
 	log.Info("Provisioning Packet server...")
