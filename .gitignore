@@ -1,2 +1,4 @@
 bin/docker-machine-driver-*
 checksums
+.idea/
+
