@@ -1,6 +1,6 @@
 default: build
 
-version := v0.2.1
+version := v0.2.2
 version_description := "Docker Machine Driver Plugin to Provision on Packet"
 human_name := "$(version) - Docker Machine v0.8.2+"
 version := "$(version)"
