@@ -245,6 +245,12 @@ func (d *Driver) Create() error {
 	log.Info("Provisioning Packet server...")
 	newDevice, _, err := client.Devices.Create(createRequest)
 	if err != nil {
+		//cleanup ssh keys if device faild
+		if _, err := client.SSHKeys.Delete(d.SSHKeyID); err != nil {
+			if er, ok := err.(*packngo.ErrorResponse); !ok || er.Response.StatusCode != 404 {
+				return err
+			}
+		}
 		return err
 	}
 	t0 := time.Now()
