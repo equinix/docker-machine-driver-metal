@@ -253,7 +253,7 @@ func (d *Driver) Create() error {
 		UserData:              userdata,
 		Tags:                  d.Tags,
 		SpotInstance:          d.SpotInstance,
-		SpotPriceMax:          -1,
+		SpotPriceMax:          d.SpotPriceMax,
 	}
 
 	log.Info("Provisioning Packet server...")
