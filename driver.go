@@ -203,7 +203,7 @@ func (d *Driver) PreCreateCheck() error {
 	}
 
 	client := d.getClient()
-	facilities, _, err := client.Facilities.List()
+	facilities, _, err := client.Facilities.List(nil)
 	if err != nil {
 		return err
 	}
@@ -246,7 +246,7 @@ func (d *Driver) Create() error {
 		Hostname:              d.MachineName,
 		Plan:                  d.Plan,
 		HardwareReservationID: hardwareReservationId,
-		Facility:              d.Facility,
+		Facility:              []string{d.Facility},
 		OS:                    d.OperatingSystem,
 		BillingCycle:          d.BillingCycle,
 		ProjectID:             d.ProjectID,
@@ -272,7 +272,7 @@ func (d *Driver) Create() error {
 	d.DeviceID = newDevice.ID
 
 	for {
-		newDevice, _, err = client.Devices.Get(d.DeviceID)
+		newDevice, _, err = client.Devices.Get(d.DeviceID, nil)
 		if err != nil {
 			return err
 		}
@@ -297,7 +297,7 @@ func (d *Driver) Create() error {
 	log.Info("Waiting for Provisioning...")
 	stage := float32(0)
 	for {
-		newDevice, _, err = client.Devices.Get(d.DeviceID)
+		newDevice, _, err = client.Devices.Get(d.DeviceID, nil)
 		if err != nil {
 			return err
 		}
@@ -364,7 +364,7 @@ func (d *Driver) GetIP() (string, error) {
 }
 
 func (d *Driver) GetState() (state.State, error) {
-	device, _, err := d.getClient().Devices.Get(d.DeviceID)
+	device, _, err := d.getClient().Devices.Get(d.DeviceID, nil)
 	if err != nil {
 		return state.Error, err
 	}
