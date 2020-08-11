@@ -144,7 +144,7 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 
 	d.SpotInstance = flags.Bool("packet-spot-instance")
 
-	if d.SpotInstance == true {
+	if d.SpotInstance {
 		SpotPriceMax := flags.String("packet-spot-price-max")
 		if SpotPriceMax == "" {
 			d.SpotPriceMax = -1
