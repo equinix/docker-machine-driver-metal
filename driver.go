@@ -23,7 +23,13 @@ const (
 	consumerToken   = "24e70949af5ecd17fe8e867b335fc88e7de8bd4ad617c0403d8769a376ddea72"
 )
 
-var _ drivers.Driver = &Driver{}
+var (
+	// version is set by goreleaser at build time
+	version = "devel"
+
+	// build time check that the Driver type implements the Driver interface
+	_ drivers.Driver = &Driver{}
+)
 
 type Driver struct {
 	*drivers.BaseDriver
@@ -40,6 +46,7 @@ type Driver struct {
 	CaCertPath              string
 	SSHKeyID                string
 	UserDataFile            string
+	UserAgentPrefix         string
 	SpotInstance            bool
 	SpotPriceMax            float64
 	TerminationTime         *packngo.Timestamp
@@ -117,6 +124,11 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 			Usage:  "The Packet Instance Termination Time",
 			EnvVar: "PACKET_TERMINATION_TIME",
 		},
+		mcnflag.StringFlag{
+			EnvVar: "PACKET_UA_PREFIX",
+			Name:   "packet-ua-prefix",
+			Usage:  fmt.Sprintf("Prefix the User-Agent in Packet API calls with some 'product/version'"),
+		},
 	}
 }
 
@@ -137,6 +149,7 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	d.OperatingSystem = flags.String("packet-os")
 	d.Facility = flags.String("packet-facility-code")
 	d.BillingCycle = flags.String("packet-billing-cycle")
+	d.UserAgentPrefix = flags.String("packet-ua-prefix")
 	d.UserDataFile = flags.String("packet-userdata")
 
 	d.Plan = flags.String("packet-plan")
@@ -424,7 +437,15 @@ func (d *Driver) GetDockerConfigDir() string {
 }
 
 func (d *Driver) getClient() *packngo.Client {
-	return packngo.NewClientWithAuth(consumerToken, d.ApiKey, nil)
+	client := packngo.NewClientWithAuth(consumerToken, d.ApiKey, nil)
+	userAgent := fmt.Sprintf("docker-machine-driver-%s/%s %s", d.DriverName(), version, client.UserAgent)
+
+	if len(d.UserAgentPrefix) > 0 {
+		userAgent = fmt.Sprintf("%s %s", d.UserAgentPrefix, userAgent)
+	}
+
+	client.UserAgent = userAgent
+	return client
 }
 
 func (d *Driver) getOsFlavors() ([]string, error) {
