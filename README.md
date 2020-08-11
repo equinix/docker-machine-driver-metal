@@ -70,3 +70,12 @@ $ sudo make install
 ```
 
 Now you will now be able to specify a `-driver` of `packet` to `docker-machine` commands.
+
+### Release
+
+Releases are handled by [GitHub Workflows](.github/workflows/release.yml) and [goreleaser](.goreleaser.yml).
+
+To push a new release, checkout the commit that you want released and: `make tag version=v0.2.3`.  Robots handle the rest.
+
+Releases are archived at <https://github.com/packethost/docker-machine-driver-packet/releases>
+
