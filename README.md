@@ -77,10 +77,30 @@ sudo make install
 
 Now you will now be able to specify a `-driver` of `packet` to `docker-machine` commands.
 
-### Release
+### Debugging
+
+To monitor the Docker debugging details and the Packet API calls:
+
+``sh
+go build
+PACKNGO_DEBUG=1 PATH=`pwd`:$PATH docker-machine \
+  --debug create -d packet \
+  --packet-api-key=$PACKET_TOKEN \
+  --packet-project-id=$PACKET_PROJECT \
+  foo
+```
+
+### Release Process
+
+This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 Releases are handled by [GitHub Workflows](.github/workflows/release.yml) and [goreleaser](.goreleaser.yml).
 
 To push a new release, checkout the commit that you want released and: `make tag version=v0.2.3`.  Robots handle the rest.
 
-Releases are archived at <https://github.com/packethost/docker-machine-driver-packet/releases>
+Maintainers should verify that the release notes convey to users all of the notable changes between releases, in a human readable way.
+The format for each release should be based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
+
+## Releases and Changes
+
+See <https://github.com/packethost/docker-machine-driver-packet/releases> for the latest releases, install archives, and the project changelog.
