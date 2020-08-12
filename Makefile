@@ -1,10 +1,5 @@
 default: build
 
-version := v0.2.2
-version_description := "Docker Machine Driver Plugin to Provision on Packet"
-human_name := "$(version) - Docker Machine v0.8.2+"
-version := "$(version)"
-
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 current_dir := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
 github_user := "packethost"
@@ -21,26 +16,17 @@ containerbuild:
 		$(current_dir) \
 		make build
 
-containerrelease:
-	docker build -t $(current_dir) .
-	docker run \
-		-v $(shell pwd):/go/src/$(project) \
-		-e GOOS \
-		-e GOARCH \
-		-e GITHUB_TOKEN \
-		-e GO15VENDOREXPERIMENT=1 \
-		$(current_dir) \
-		make release
-
 clean:
-	rm -r bin/docker-machine*
+	rm -r docker-machine-driver-packet bin/docker-machine-driver-packet
 
 compile:
-	GO111MODULE=on GOGC=off CGOENABLED=0 go build -ldflags "-s" -o bin/$(current_dir)$(BIN_SUFFIX)/$(current_dir) ./bin/...
+	GO111MODULE=on GOGC=off CGOENABLED=0 go build -ldflags "-s"
 
+# deprecated in favor of goreleaser
 pack: cross
 	find ./bin -mindepth 1 -type d -exec zip -r -j {}.zip {} \;
 
+# deprecated in favor of goreleaser
 checksums: pack
 	for file in $(shell find bin -type f -name '*.zip'); do \
 		( \
@@ -61,6 +47,7 @@ print-success:
 
 build: compile print-success
 
+# deprecated in favor of goreleaser
 cross:
 	for os in darwin windows linux; do \
 		for arch in amd64; do \
@@ -72,46 +59,8 @@ cross:
 install:
 	cp bin/$(current_dir)/$(current_dir) /usr/local/bin/$(current_dir)
 
-cleanrelease:
-	github-release delete \
-		--user $(github_user) \
-		--repo $(current_dir) \
-		--tag $(version)
-	git tag -d $(version)
-	git push origin :refs/tags/$(version)
-
 tag:
 	if ! git tag | grep -q $(version); then \
 		git tag -m $(version) $(version); \
 		git push --tags; \
 	fi
-
-checktoken:
-	@if [[ -z $$GITHUB_TOKEN ]]; then \
-		echo "GITHUB_TOKEN is not set, exiting" >&2; \
-		exit 1; \
-	fi
-
-release: checktoken tag pack checksums
-	github-release release \
-		--user $(github_user) \
-		--repo $(current_dir) \
-		--tag $(version) \
-		--name $(human_name) \
-		--description $(version_description)
-	for os in darwin windows linux; do \
-		for arch in amd64; do \
-			github-release upload \
-				--user $(github_user) \
-				--repo $(current_dir) \
-				--tag $(version) \
-				--name $(current_dir)_$$os-$$arch.zip \
-				--file bin/$(current_dir)_$$os-$$arch.zip; \
-		done; \
-	done
-	github-release upload \
-		--user $(github_user) \
-		--repo $(current_dir) \
-		--tag $(version) \
-		--name checksums \
-		--file checksums
