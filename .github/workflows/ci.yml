@@ -17,6 +17,12 @@ jobs:
         with:
           # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
           version: v1.30
+      -
+        name: Check GoReleaser
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          version: latest
+          args: check
   test:
     name: test
     runs-on: ubuntu-latest
@@ -24,6 +30,7 @@ jobs:
       matrix:
         go: [ '1.14' ]
     steps:
+      - uses: actions/checkout@v2
       - uses: actions/setup-go@v1
         with:
           go-version: ${{ matrix.go }}
