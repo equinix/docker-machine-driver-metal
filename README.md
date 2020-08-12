@@ -1,21 +1,25 @@
 # docker-machine-driver-packet
-Packet bare-metal cloud driver for Docker Machine called 
 
-> Driver name: `packet`
+[![GitHub release](https://img.shields.io/github/release/packethost/docker-machine-driver-packet/all.svg?style=flat-square)](https://github.com/packethost/docker-machine-driver-packet/releases)
+[![Go Report Card](https://goreportcard.com/badge/github.com/packethost/docker-machine-driver-packet)](https://goreportcard.com/report/github.com/packethost/docker-machine-driver-packet)
+[![Slack](https://slack.packet.com/badge.svg)](https://slack.packet.com)
+[![Twitter Follow](https://img.shields.io/twitter/follow/packethost.svg?style=social&label=Follow)](https://twitter.com/intent/follow?screen_name=packethost)
 
-### Usage
+The [Packet](https://packet.com) cloud bare-metal machine driver for Docker.
+
+## Usage
 
 You can provision bare-metal hosts once you have built and installed the docker-machine driver. The binary will be placed in your `$PATH` directory.
 
 Test that the installation worked by typing in:
 
-```
-$ docker-machine create --driver packet
+```sh
+docker-machine create --driver packet
 ```
 
-#### Example usage:
+### Example usage
 
-This creates the following: 
+This creates the following:
 
 * Type0 machine
 * in the EWR region (NJ)
@@ -23,7 +27,7 @@ This creates the following:
 * in project $PROJECT
 * Using $API_KEY - [get yours from the Portal](https://app.packet.net/users/me/api-keys)
 
-```
+```sh
 $ docker-machine create sloth \
   --driver packet --packet-api-key=$API_KEY --packet-os=ubuntu_16_04 --packet-project-id=$PROJECT --packet-facility-code "ewr1" --packet-plan "baremetal_0"
   
@@ -53,6 +57,8 @@ To see how to connect your Docker Client to the Docker Engine running on this vi
 
 At this point you can now `docker-machine env sloth` and then start using your Docker bare-metal host!
 
+## Development
+
 ### Building
 
 Pre-reqs: `docker-machine` and `make`
@@ -63,10 +69,10 @@ Pre-reqs: `docker-machine` and `make`
 
 * Build and install the driver:
 
-```
-$ cd docker-machine-driver-packet
-$ make 
-$ sudo make install
+```sh
+cd docker-machine-driver-packet
+make
+sudo make install
 ```
 
 Now you will now be able to specify a `-driver` of `packet` to `docker-machine` commands.
@@ -78,4 +84,3 @@ Releases are handled by [GitHub Workflows](.github/workflows/release.yml) and [g
 To push a new release, checkout the commit that you want released and: `make tag version=v0.2.3`.  Robots handle the rest.
 
 Releases are archived at <https://github.com/packethost/docker-machine-driver-packet/releases>
-
