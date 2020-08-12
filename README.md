@@ -81,7 +81,7 @@ Now you will now be able to specify a `-driver` of `packet` to `docker-machine` 
 
 To monitor the Docker debugging details and the Packet API calls:
 
-``sh
+```sh
 go build
 PACKNGO_DEBUG=1 PATH=`pwd`:$PATH docker-machine \
   --debug create -d packet \
