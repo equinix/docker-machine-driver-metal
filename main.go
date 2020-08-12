@@ -4,7 +4,7 @@ package main
 
 import (
 	"github.com/docker/machine/libmachine/drivers/plugin"
-	packet "github.com/packethost/docker-machine-driver-packet"
+	packet "github.com/packethost/docker-machine-driver-packet/pkg/drivers/packet"
 )
 
 func main() {

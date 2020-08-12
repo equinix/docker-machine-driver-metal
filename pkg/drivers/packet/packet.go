@@ -127,7 +127,7 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 		mcnflag.StringFlag{
 			EnvVar: "PACKET_UA_PREFIX",
 			Name:   "packet-ua-prefix",
-			Usage:  fmt.Sprintf("Prefix the User-Agent in Packet API calls with some 'product/version'"),
+			Usage:  "Prefix the User-Agent in Packet API calls with some 'product/version'",
 		},
 	}
 }

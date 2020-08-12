@@ -8,6 +8,8 @@ builds:
     - CGO_ENABLED=0
     - GO111MODULE=on
   binary: docker-machine-driver-packet
+  ldflags:
+   - -X github.com/packethost/docker-machine-driver-packet/pkg/drivers/packet/packet.version={{.Version}}
   goos:
     - windows
     - darwin

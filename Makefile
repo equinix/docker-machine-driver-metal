@@ -17,10 +17,10 @@ containerbuild:
 		make build
 
 clean:
-	rm -r bin/docker-machine*
+	rm -r docker-machine-driver-packet bin/docker-machine-driver-packet
 
 compile:
-	GO111MODULE=on GOGC=off CGOENABLED=0 go build -ldflags "-s" -o bin/$(current_dir)$(BIN_SUFFIX)/$(current_dir) ./bin/...
+	GO111MODULE=on GOGC=off CGOENABLED=0 go build -ldflags "-s"
 
 # deprecated in favor of goreleaser
 pack: cross
