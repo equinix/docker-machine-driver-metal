@@ -4,8 +4,11 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/packethost/docker-machine-driver-packet)](https://goreportcard.com/report/github.com/packethost/docker-machine-driver-packet)
 [![Slack](https://slack.packet.com/badge.svg)](https://slack.packet.com)
 [![Twitter Follow](https://img.shields.io/twitter/follow/packethost.svg?style=social&label=Follow)](https://twitter.com/intent/follow?screen_name=packethost)
+![](https://img.shields.io/badge/Stability-Maintained-green.svg)
 
 The [Packet](https://packet.com) cloud bare-metal machine driver for Docker.
+
+This repository is [Maintained](https://github.com/packethost/standards/blob/master/maintained-statement.md) meaning that this software is supported by Packet and its community - available to use in production environments.
 
 ## Usage
 
