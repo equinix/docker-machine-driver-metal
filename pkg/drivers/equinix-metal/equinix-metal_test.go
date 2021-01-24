@@ -1,4 +1,4 @@
-package packet
+package metal
 
 import (
 	"testing"
@@ -12,8 +12,8 @@ func TestSetConfigFromFlags(t *testing.T) {
 
 	checkFlags := &drivers.CheckDriverOptions{
 		FlagsValues: map[string]interface{}{
-			"packet-api-key":    "APIKEY",
-			"packet-project-id": "PROJECT",
+			"metal-api-key":    "APIKEY",
+			"metal-project-id": "PROJECT",
 		},
 		CreateFlags: driver.GetCreateFlags(),
 	}

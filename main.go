@@ -4,9 +4,9 @@ package main
 
 import (
 	"github.com/docker/machine/libmachine/drivers/plugin"
-	packet "github.com/packethost/docker-machine-driver-packet/pkg/drivers/packet"
+	metal "github.com/packethost/docker-machine-driver-packet/pkg/drivers/equinix-metal"
 )
 
 func main() {
-	plugin.RegisterDriver(new(packet.Driver))
+	plugin.RegisterDriver(new(metal.Driver))
 }
