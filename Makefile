@@ -17,7 +17,7 @@ containerbuild:
 		make build
 
 clean:
-	rm -r docker-machine-driver-equinix-metal bin/docker-machine-driver-equinix-metal
+	rm -r docker-machine-driver-equinix-metal bin/docker-machine-driver-metal
 
 compile:
 	GO111MODULE=on GOGC=off CGOENABLED=0 go build -ldflags "-s"
