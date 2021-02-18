@@ -1,4 +1,5 @@
 bin/docker-machine-driver-*
+docker-machine-driver-*
 checksums
 .idea/
 .vscode/

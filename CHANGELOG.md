@@ -1,1 +1,1 @@
-See <https://github.com/packethost/docker-machine-driver-packet/releases>
+See <https://github.com/equinix/docker-machine-driver-metal/releases>

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
-package packet
+package metal
 
 import (
 	"fmt"
@@ -53,7 +53,7 @@ type Driver struct {
 }
 
 // NewDriver is a backward compatible Driver factory method.  Using
-// new(packet.Driver) is preferred.
+// new(metal.Driver) is preferred.
 func NewDriver(hostName, storePath string) *Driver {
 	return &Driver{
 		BaseDriver: &drivers.BaseDriver{
@@ -66,99 +66,99 @@ func NewDriver(hostName, storePath string) *Driver {
 func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 	return []mcnflag.Flag{
 		mcnflag.StringFlag{
-			Name:   "packet-api-key",
-			Usage:  "Packet api key",
-			EnvVar: "PACKET_API_KEY",
+			Name:   "metal-api-key",
+			Usage:  "Equinix Metal api key",
+			EnvVar: "METAL_AUTH_TOKEN",
 		},
 		mcnflag.StringFlag{
-			Name:   "packet-project-id",
-			Usage:  "Packet Project Id",
-			EnvVar: "PACKET_PROJECT_ID",
+			Name:   "metal-project-id",
+			Usage:  "Equinix Metal Project Id",
+			EnvVar: "METAL_PROJECT_ID",
 		},
 		mcnflag.StringFlag{
-			Name:   "packet-os",
-			Usage:  "Packet OS",
+			Name:   "metal-os",
+			Usage:  "Equinix Metal OS",
 			Value:  "ubuntu_16_04",
-			EnvVar: "PACKET_OS",
+			EnvVar: "METAL_OS",
 		},
 		mcnflag.StringFlag{
-			Name:   "packet-facility-code",
-			Usage:  "Packet facility code",
+			Name:   "metal-facility-code",
+			Usage:  "Equinix Metal facility code",
 			Value:  "ewr1",
-			EnvVar: "PACKET_FACILITY_CODE",
+			EnvVar: "METAL_FACILITY_CODE",
 		},
 		mcnflag.StringFlag{
-			Name:   "packet-plan",
-			Usage:  "Packet Server Plan",
+			Name:   "metal-plan",
+			Usage:  "Equinix Metal Server Plan",
 			Value:  "baremetal_0",
-			EnvVar: "PACKET_PLAN",
+			EnvVar: "METAL_PLAN",
 		},
 		mcnflag.StringFlag{
-			Name:   "packet-hw-reservation-id",
-			Usage:  "Packet Reserved hardware ID",
-			EnvVar: "PACKET_HW_ID",
+			Name:   "metal-hw-reservation-id",
+			Usage:  "Equinix Metal Reserved hardware ID",
+			EnvVar: "METAL_HW_ID",
 		},
 		mcnflag.StringFlag{
-			Name:   "packet-billing-cycle",
-			Usage:  "Packet billing cycle, hourly or monthly",
+			Name:   "metal-billing-cycle",
+			Usage:  "Equinix Metal billing cycle, hourly or monthly",
 			Value:  "hourly",
-			EnvVar: "PACKET_BILLING_CYCLE",
+			EnvVar: "METAL_BILLING_CYCLE",
 		},
 		mcnflag.StringFlag{
-			Name:   "packet-userdata",
+			Name:   "metal-userdata",
 			Usage:  "Path to file with cloud-init user-data",
-			EnvVar: "PACKET_USERDATA",
+			EnvVar: "METAL_USERDATA",
 		},
 		mcnflag.BoolFlag{
-			Name:   "packet-spot-instance",
-			Usage:  "Request a Packet Spot Instance",
-			EnvVar: "PACKET_SPOT_INSTANCE",
+			Name:   "metal-spot-instance",
+			Usage:  "Request a Equinix Metal Spot Instance",
+			EnvVar: "METAL_SPOT_INSTANCE",
 		},
 		mcnflag.StringFlag{
-			Name:   "packet-spot-price-max",
-			Usage:  "The maximum Packet Spot Price",
-			EnvVar: "PACKET_SPOT_PRICE_MAX",
+			Name:   "metal-spot-price-max",
+			Usage:  "The maximum Equinix Metal Spot Price",
+			EnvVar: "METAL_SPOT_PRICE_MAX",
 		},
 		mcnflag.StringFlag{
-			Name:   "packet-termination-time",
-			Usage:  "The Packet Instance Termination Time",
-			EnvVar: "PACKET_TERMINATION_TIME",
+			Name:   "metal-termination-time",
+			Usage:  "The Equinix Metal Instance Termination Time",
+			EnvVar: "METAL_TERMINATION_TIME",
 		},
 		mcnflag.StringFlag{
-			EnvVar: "PACKET_UA_PREFIX",
-			Name:   "packet-ua-prefix",
-			Usage:  "Prefix the User-Agent in Packet API calls with some 'product/version'",
+			EnvVar: "METAL_UA_PREFIX",
+			Name:   "metal-ua-prefix",
+			Usage:  "Prefix the User-Agent in Equinix Metal API calls with some 'product/version'",
 		},
 	}
 }
 
 func (d *Driver) DriverName() string {
-	return "packet"
+	return "metal"
 }
 
 func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
-	if strings.Contains(flags.String("packet-os"), "coreos") {
+	if strings.Contains(flags.String("metal-os"), "coreos") {
 		d.SSHUser = "core"
 	}
-	if strings.Contains(flags.String("packet-os"), "rancher") {
+	if strings.Contains(flags.String("metal-os"), "rancher") {
 		d.SSHUser = "rancher"
 	}
 
-	d.ApiKey = flags.String("packet-api-key")
-	d.ProjectID = flags.String("packet-project-id")
-	d.OperatingSystem = flags.String("packet-os")
-	d.Facility = flags.String("packet-facility-code")
-	d.BillingCycle = flags.String("packet-billing-cycle")
-	d.UserAgentPrefix = flags.String("packet-ua-prefix")
-	d.UserDataFile = flags.String("packet-userdata")
+	d.ApiKey = flags.String("metal-api-key")
+	d.ProjectID = flags.String("metal-project-id")
+	d.OperatingSystem = flags.String("metal-os")
+	d.Facility = flags.String("metal-facility-code")
+	d.BillingCycle = flags.String("metal-billing-cycle")
+	d.UserAgentPrefix = flags.String("metal-ua-prefix")
+	d.UserDataFile = flags.String("metal-userdata")
 
-	d.Plan = flags.String("packet-plan")
-	d.HardwareReserverationID = flags.String("packet-hw-reservation-id")
+	d.Plan = flags.String("metal-plan")
+	d.HardwareReserverationID = flags.String("metal-hw-reservation-id")
 
-	d.SpotInstance = flags.Bool("packet-spot-instance")
+	d.SpotInstance = flags.Bool("metal-spot-instance")
 
 	if d.SpotInstance {
-		SpotPriceMax := flags.String("packet-spot-price-max")
+		SpotPriceMax := flags.String("metal-spot-price-max")
 		if SpotPriceMax == "" {
 			d.SpotPriceMax = -1
 		} else {
@@ -169,7 +169,7 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 			d.SpotPriceMax = SpotPriceMax
 		}
 
-		TerminationTime := flags.String("packet-termination-time")
+		TerminationTime := flags.String("metal-termination-time")
 		if TerminationTime == "" {
 			d.TerminationTime = nil
 		} else {
@@ -183,10 +183,10 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	}
 
 	if d.ApiKey == "" {
-		return fmt.Errorf("packet driver requires the --packet-api-key option")
+		return fmt.Errorf("metal driver requires the --metal-api-key option")
 	}
 	if d.ProjectID == "" {
-		return fmt.Errorf("packet driver requires the --packet-project-id option")
+		return fmt.Errorf("metal driver requires the --metal-project-id option")
 	}
 
 	return nil
@@ -208,7 +208,7 @@ func (d *Driver) PreCreateCheck() error {
 		return err
 	}
 	if !stringInSlice(d.OperatingSystem, flavors) {
-		return fmt.Errorf("specified --packet-os not one of %v", strings.Join(flavors, ", "))
+		return fmt.Errorf("specified --metal-os not one of %v", strings.Join(flavors, ", "))
 	}
 
 	if d.Facility == "any" {
@@ -226,7 +226,7 @@ func (d *Driver) PreCreateCheck() error {
 		}
 	}
 
-	return fmt.Errorf("packet requires a valid facility")
+	return fmt.Errorf("metal requires a valid facility")
 }
 
 func (d *Driver) Create() error {
@@ -269,7 +269,7 @@ func (d *Driver) Create() error {
 		SpotPriceMax:          d.SpotPriceMax,
 	}
 
-	log.Info("Provisioning Packet server...")
+	log.Info("Provisioning Equinix Metal server...")
 	newDevice, _, err := client.Devices.Create(createRequest)
 	if err != nil {
 		//cleanup ssh keys if device faild
@@ -414,7 +414,7 @@ func (d *Driver) Remove() error {
 		}
 	}
 
-	if _, err := client.Devices.Delete(d.DeviceID); err != nil {
+	if _, err := client.Devices.Delete(d.DeviceID, false); err != nil {
 		if er, ok := err.(*packngo.ErrorResponse); !ok || er.Response.StatusCode != 404 {
 			return err
 		}

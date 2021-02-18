@@ -7,9 +7,9 @@ builds:
 - env:
     - CGO_ENABLED=0
     - GO111MODULE=on
-  binary: docker-machine-driver-packet
+  binary: docker-machine-driver-metal
   ldflags:
-   - -X github.com/packethost/docker-machine-driver-packet/pkg/drivers/packet/packet.version={{.Version}}
+   - -X github.com/equinix/docker-machine-driver-metal/pkg/drivers/metal/metal.version={{.Version}}
   goos:
     - windows
     - darwin
