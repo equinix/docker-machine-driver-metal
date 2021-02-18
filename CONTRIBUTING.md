@@ -5,7 +5,7 @@
   - bugs: [https://github.com/equinix/docker-machine-driver-metal/issues](https://github.com/equinix/docker-machine-driver-metal/issues)
 
 ### Code of Conduct
-Available via [https://github.com/equinix/docker-machine-driver-metal/blob/master/.github/CODE_OF_CONDUCT.md](https://github.com/equinix/docker-machine-driver-metal/blob/master/.github/CODE_OF_CONDUCT.md)
+Available via [https://github.com/equinix/docker-machine-driver-metal/blob/main/.github/CODE_OF_CONDUCT.md](https://github.com/equinix/docker-machine-driver-metal/blob/main/.github/CODE_OF_CONDUCT.md)
 
 ### How to Submit Change Requests
 Please submit change requests and / or features via [Issues](https://github.com/equinix/docker-machine-driver-metal/issues). There's no guarantee it'll be changed, but you never know until you try. We'll try to add comments as soon as possible, though.
