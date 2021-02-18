@@ -2,7 +2,7 @@ default: build
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 current_dir := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
-github_user := "packethost"
+github_user := "equinix"
 project := "github.com/$(github_user)/$(current_dir)"
 bin_suffix := ""
 
@@ -17,7 +17,7 @@ containerbuild:
 		make build
 
 clean:
-	rm -r docker-machine-driver-equinix-metal bin/docker-machine-driver-metal
+	rm -r docker-machine-driver-metal bin/docker-machine-driver-metal
 
 compile:
 	GO111MODULE=on GOGC=off CGOENABLED=0 go build -ldflags "-s"

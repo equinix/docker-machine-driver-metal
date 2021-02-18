@@ -1,4 +1,4 @@
-module github.com/packethost/docker-machine-driver-packet
+module github.com/equinix/docker-machine-driver-metal
 
 go 1.14
 

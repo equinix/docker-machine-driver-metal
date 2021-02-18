@@ -9,7 +9,7 @@ builds:
     - GO111MODULE=on
   binary: docker-machine-driver-metal
   ldflags:
-   - -X github.com/packethost/docker-machine-driver-metal/pkg/drivers/metal/metal.version={{.Version}}
+   - -X github.com/equinix/docker-machine-driver-metal/pkg/drivers/metal/metal.version={{.Version}}
   goos:
     - windows
     - darwin

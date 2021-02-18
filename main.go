@@ -4,7 +4,7 @@ package main
 
 import (
 	"github.com/docker/machine/libmachine/drivers/plugin"
-	metal "github.com/packethost/docker-machine-driver-metal/pkg/drivers/metal"
+	metal "github.com/equinix/docker-machine-driver-metal/pkg/drivers/metal"
 )
 
 func main() {

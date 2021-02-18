@@ -68,7 +68,7 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 		mcnflag.StringFlag{
 			Name:   "metal-api-key",
 			Usage:  "Equinix Metal api key",
-			EnvVar: "METAL_API_KEY",
+			EnvVar: "METAL_AUTH_TOKEN",
 		},
 		mcnflag.StringFlag{
 			Name:   "metal-project-id",
