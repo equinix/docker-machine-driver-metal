@@ -88,7 +88,7 @@ To monitor the Docker debugging details and the Equinix Metal API calls:
 go build
 PACKNGO_DEBUG=1 PATH=`pwd`:$PATH docker-machine \
   --debug create -d metal \
-  --metal-api-key=$METAL_TOKEN \
+  --metal-api-key=$METAL_AUTH_TOKEN \
   --metal-project-id=$METAL_PROJECT \
   foo
 ```
