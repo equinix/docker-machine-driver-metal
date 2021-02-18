@@ -414,7 +414,7 @@ func (d *Driver) Remove() error {
 		}
 	}
 
-	if _, err := client.Devices.Delete(d.DeviceID); err != nil {
+	if _, err := client.Devices.Delete(d.DeviceID, false); err != nil {
 		if er, ok := err.(*packngo.ErrorResponse); !ok || er.Response.StatusCode != 404 {
 			return err
 		}
