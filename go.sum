@@ -1,5 +1,7 @@
 github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 h1:w+iIsaOQNcT7OZ575w+acHgRric5iCyQh+xv+KJ4HB8=
 github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78/go.mod h1:LmzpDX56iTiv29bbRTIsUNlaFfuhWRQBWjQdVyAevI8=
+github.com/carmo-evan/strtotime v0.0.0-20200108203155-3136cf889e3b h1:U3vQoEOmB8zQ34LR8jQt6XMIdOiq49OZ1aPGjG1fJKE=
+github.com/carmo-evan/strtotime v0.0.0-20200108203155-3136cf889e3b/go.mod h1:IqY2NtbgybBNEdxOZLXCF/OAAisAOiB4+F7/ovbQN8M=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

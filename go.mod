@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
+	github.com/carmo-evan/strtotime v0.0.0-20200108203155-3136cf889e3b // indirect
 	github.com/docker/docker v0.0.0-20180805161158-f57f260b49b6 // indirect
 	github.com/docker/machine v0.16.2
 	github.com/google/go-cmp v0.3.0 // indirect
