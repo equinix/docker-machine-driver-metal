@@ -39,6 +39,7 @@ type Driver struct {
 	Plan                    string
 	HardwareReserverationID string
 	Facility                string
+	Metro                   string
 	OperatingSystem         string
 	BillingCycle            string
 	DeviceID                string
@@ -68,7 +69,7 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 	return []mcnflag.Flag{
 		mcnflag.StringFlag{
 			Name:   "metal-api-key",
-			Usage:  "Equinix Metal api key",
+			Usage:  "Equinix Metal API Key",
 			EnvVar: "METAL_AUTH_TOKEN",
 		},
 		mcnflag.StringFlag{
@@ -79,14 +80,18 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 		mcnflag.StringFlag{
 			Name:   "metal-os",
 			Usage:  "Equinix Metal OS",
-			Value:  "ubuntu_16_04",
+			Value:  "ubuntu_20_04",
 			EnvVar: "METAL_OS",
 		},
 		mcnflag.StringFlag{
 			Name:   "metal-facility-code",
 			Usage:  "Equinix Metal facility code",
-			Value:  "ewr1",
 			EnvVar: "METAL_FACILITY_CODE",
+		},
+		mcnflag.StringFlag{
+			Name:   "metal-metro-code",
+			Usage:  "Equinix Metal metro code",
+			EnvVar: "METAL_METRO_CODE",
 		},
 		mcnflag.StringFlag{
 			Name:   "metal-plan",
@@ -149,6 +154,7 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	d.ProjectID = flags.String("metal-project-id")
 	d.OperatingSystem = flags.String("metal-os")
 	d.Facility = flags.String("metal-facility-code")
+	d.Metro = flags.String("metal-metro-code")
 	d.BillingCycle = flags.String("metal-billing-cycle")
 	d.UserAgentPrefix = flags.String("metal-ua-prefix")
 	d.UserDataFile = flags.String("metal-userdata")
@@ -214,11 +220,34 @@ func (d *Driver) PreCreateCheck() error {
 		return fmt.Errorf("specified --metal-os not one of %v", strings.Join(flavors, ", "))
 	}
 
+	if d.Metro != "" && d.Facility != "" {
+		return fmt.Errorf("facility and metro can not be used together")
+	}
+
+	if d.Metro == "" && d.Facility == "" {
+		return fmt.Errorf("either facility or metro must be specified")
+	}
+
 	if d.Facility == "any" {
 		return nil
 	}
 
 	client := d.getClient()
+
+	if d.Metro != "" {
+		metros, _, err := client.Metros.List(nil)
+		if err != nil {
+			return err
+		}
+		for _, metro := range metros {
+			if metro.Code == d.Metro {
+				return nil
+			}
+		}
+
+		return fmt.Errorf("metal requires a valid metro")
+	}
+
 	facilities, _, err := client.Facilities.List(nil)
 	if err != nil {
 		return err
@@ -262,7 +291,7 @@ func (d *Driver) Create() error {
 		Hostname:              d.MachineName,
 		Plan:                  d.Plan,
 		HardwareReservationID: hardwareReservationId,
-		Facility:              []string{d.Facility},
+		Metro:                 d.Metro,
 		OS:                    d.OperatingSystem,
 		BillingCycle:          d.BillingCycle,
 		ProjectID:             d.ProjectID,
@@ -271,6 +300,10 @@ func (d *Driver) Create() error {
 		SpotInstance:          d.SpotInstance,
 		SpotPriceMax:          d.SpotPriceMax,
 		TerminationTime:       d.TerminationTime,
+	}
+
+	if d.Facility != "" {
+		createRequest.Facility = []string{d.Facility}
 	}
 
 	log.Info("Provisioning Equinix Metal server...")
