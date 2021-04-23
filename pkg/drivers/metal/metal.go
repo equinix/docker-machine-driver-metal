@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/carmo-evan/strtotime"
 	"github.com/docker/machine/libmachine/drivers"
 	"github.com/docker/machine/libmachine/log"
 	"github.com/docker/machine/libmachine/mcnflag"
@@ -173,12 +174,14 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 		if TerminationTime == "" {
 			d.TerminationTime = nil
 		} else {
-			layout := "2006-01-02T15:04:05.000Z"
-			TerminationTime, err := time.Parse(layout, TerminationTime)
+			Timestamp, err := strtotime.Parse(TerminationTime, time.Now().Unix())
 			if err != nil {
 				return err
 			}
-			d.TerminationTime.Time = TerminationTime
+			if Timestamp <= time.Now().Unix() {
+				return fmt.Errorf("--metal-termination-time cannot be in the past")
+			}
+			d.TerminationTime = &packngo.Timestamp{Time: time.Unix(Timestamp, 0)}
 		}
 	}
 
@@ -267,6 +270,7 @@ func (d *Driver) Create() error {
 		Tags:                  d.Tags,
 		SpotInstance:          d.SpotInstance,
 		SpotPriceMax:          d.SpotPriceMax,
+		TerminationTime:       d.TerminationTime,
 	}
 
 	log.Info("Provisioning Equinix Metal server...")
