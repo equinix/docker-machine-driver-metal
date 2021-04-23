@@ -5,6 +5,7 @@ package metal
 import (
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -22,6 +23,8 @@ import (
 const (
 	dockerConfigDir = "/etc/docker"
 	consumerToken   = "24e70949af5ecd17fe8e867b335fc88e7de8bd4ad617c0403d8769a376ddea72"
+	defaultOS       = "ubuntu_20_04"
+	defaultMetro    = "DC"
 )
 
 var (
@@ -80,7 +83,7 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 		mcnflag.StringFlag{
 			Name:   "metal-os",
 			Usage:  "Equinix Metal OS",
-			Value:  "ubuntu_20_04",
+			Value:  defaultOS,
 			EnvVar: "METAL_OS",
 		},
 		mcnflag.StringFlag{
@@ -90,8 +93,12 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 		},
 		mcnflag.StringFlag{
 			Name:   "metal-metro-code",
-			Usage:  "Equinix Metal metro code",
+			Usage:  fmt.Sprintf("Equinix Metal metro code (%q is used if empty and facility is not set)", defaultMetro),
 			EnvVar: "METAL_METRO_CODE",
+			// We don't set Value because Facility was previously required and
+			// defaulted. Existing configurations with "Facility" should not
+			// break. Setting a default metro value would break those
+			// configurations.
 		},
 		mcnflag.StringFlag{
 			Name:   "metal-plan",
@@ -220,45 +227,21 @@ func (d *Driver) PreCreateCheck() error {
 		return fmt.Errorf("specified --metal-os not one of %v", strings.Join(flavors, ", "))
 	}
 
+	if d.Metro == "" && d.Facility == "" {
+		d.Metro = defaultMetro
+	}
+
 	if d.Metro != "" && d.Facility != "" {
 		return fmt.Errorf("facility and metro can not be used together")
-	}
-
-	if d.Metro == "" && d.Facility == "" {
-		return fmt.Errorf("either facility or metro must be specified")
-	}
-
-	if d.Facility == "any" {
-		return nil
 	}
 
 	client := d.getClient()
 
 	if d.Metro != "" {
-		metros, _, err := client.Metros.List(nil)
-		if err != nil {
-			return err
-		}
-		for _, metro := range metros {
-			if metro.Code == d.Metro {
-				return nil
-			}
-		}
-
-		return fmt.Errorf("metal requires a valid metro")
+		return validateMetro(client, d.Metro)
 	}
 
-	facilities, _, err := client.Facilities.List(nil)
-	if err != nil {
-		return err
-	}
-	for _, facility := range facilities {
-		if facility.Code == d.Facility {
-			return nil
-		}
-	}
-
-	return fmt.Errorf("metal requires a valid facility")
+	return validateFacility(client, d.Facility)
 }
 
 func (d *Driver) Create() error {
@@ -311,7 +294,7 @@ func (d *Driver) Create() error {
 	if err != nil {
 		//cleanup ssh keys if device faild
 		if _, err := client.SSHKeys.Delete(d.SSHKeyID); err != nil {
-			if er, ok := err.(*packngo.ErrorResponse); !ok || er.Response.StatusCode != 404 {
+			if er, ok := err.(*packngo.ErrorResponse); !ok || er.Response.StatusCode != http.StatusNotFound {
 				return err
 			}
 		}
@@ -506,6 +489,38 @@ func (d *Driver) getOsFlavors() ([]string, error) {
 		}
 	}
 	return flavors, nil
+}
+
+func validateFacility(client *packngo.Client, facility string) error {
+	if facility == "any" {
+		return nil
+	}
+
+	facilities, _, err := client.Facilities.List(nil)
+	if err != nil {
+		return err
+	}
+	for _, f := range facilities {
+		if f.Code == facility {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("metal requires a valid facility")
+}
+
+func validateMetro(client *packngo.Client, metro string) error {
+	metros, _, err := client.Metros.List(nil)
+	if err != nil {
+		return err
+	}
+	for _, m := range metros {
+		if m.Code == metro {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("metal requires a valid metro")
 }
 
 func stringInSlice(a string, list []string) bool {
