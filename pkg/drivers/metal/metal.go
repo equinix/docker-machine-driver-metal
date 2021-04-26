@@ -24,7 +24,7 @@ const (
 	dockerConfigDir = "/etc/docker"
 	consumerToken   = "24e70949af5ecd17fe8e867b335fc88e7de8bd4ad617c0403d8769a376ddea72"
 	defaultOS       = "ubuntu_20_04"
-	defaultMetro    = "DC"
+	defaultMetro    = "dc"
 )
 
 var (
