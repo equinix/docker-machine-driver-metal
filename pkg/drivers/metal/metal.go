@@ -103,7 +103,7 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 		mcnflag.StringFlag{
 			Name:   "metal-plan",
 			Usage:  "Equinix Metal Server Plan",
-			Value:  "baremetal_0",
+			Value:  "c3.small.x86",
 			EnvVar: "METAL_PLAN",
 		},
 		mcnflag.StringFlag{
