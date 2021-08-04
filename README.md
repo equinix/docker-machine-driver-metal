@@ -46,13 +46,13 @@ This creates the following:
 
 - c3.small.x86 machine
 - in the NY metro
-- with Ubuntu 16.04
+- with Ubuntu 20.04
 - in project $PROJECT
 - Using $API_KEY - [get yours from the Portal](https://console.equinix.com/users/me/api-keys)
 
 ```sh
 $ docker-machine create sloth \
-  --driver metal --metal-api-key=$API_KEY --metal-os=ubuntu_16_04 --metal-project-id=$PROJECT --metal-metro-code "ny" --metal-plan "c3.small.x86"
+  --driver metal --metal-api-key=$API_KEY --metal-os=ubuntu_20_04 --metal-project-id=$PROJECT --metal-metro-code "ny" --metal-plan "c3.small.x86"
 
 Creating CA: /home/alex/.docker/machine/certs/ca.pem
 Creating client certificate: /home/alex/.docker/machine/certs/cert.pem
