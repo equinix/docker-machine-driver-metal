@@ -20,27 +20,45 @@ Test that the installation worked by typing in:
 docker-machine create --driver metal
 ```
 
+You can find the supported arguments by running `docker-machine create -d metal --help` (Equinix Metal specific arguments are shown below):
+
+| Argument                    | Default        | Description                                                                  | Environment Variable     |
+| --------------------------- | -------------- | ---------------------------------------------------------------------------- | ------------------------ |
+| `--metal-api-key`           |                | Equinix Metal API Key                                                        | `METAL_AUTH_TOKEN`       |
+| `--metal-billing-cycle`     | `hourly`       | Equinix Metal billing cycle, hourly or monthly                               | `METAL_BILLING_CYCLE`    |
+| `--metal-facility-code`     |                | Equinix Metal facility code                                                  | `METAL_FACILITY_CODE`    |
+| `--metal-hw-reservation-id` |                | Equinix Metal Reserved hardware ID                                           | `METAL_HW_ID`            |
+| `--metal-metro-code`        |                | Equinix Metal metro code ("dc" is used if empty and facility is not set)     | `METAL_METRO_CODE`       |
+| `--metal-os`                | `ubuntu_20_04` | Equinix Metal OS                                                             | `METAL_OS`               |
+| `--metal-plan`              | `c3.small.x86` | Equinix Metal Server Plan                                                    | `METAL_PLAN`             |
+| `--metal-project-id`        |                | Equinix Metal Project Id                                                     | `METAL_PROJECT_ID`       |
+| `--metal-spot-instance`     |                | Request a Equinix Metal Spot Instance                                        | `METAL_SPOT_INSTANCE`    |
+| `--metal-spot-price-max`    |                | The maximum Equinix Metal Spot Price                                         | `METAL_SPOT_PRICE_MAX`   |
+| `--metal-termination-time`  |                | The Equinix Metal Instance Termination Time                                  | `METAL_TERMINATION_TIME` |
+| `--metal-ua-prefix`         |                | Prefix the User-Agent in Equinix Metal API calls with some 'product/version' | `METAL_UA_PREFIX`        |
+| `--metal-userdata`          |                | Path to file with cloud-init user-data                                       | `METAL_USERDATA`         |
+
 ### Example usage
 
 This creates the following:
 
-* Type0 machine
-* in the EWR region (NJ)
-* with Ubuntu 16.04
-* in project $PROJECT
-* Using $API_KEY - [get yours from the Portal](https://console.equinix.com/users/me/api-keys)
+- c3.small.x86 machine
+- in the NY metro
+- with Ubuntu 16.04
+- in project $PROJECT
+- Using $API_KEY - [get yours from the Portal](https://console.equinix.com/users/me/api-keys)
 
 ```sh
 $ docker-machine create sloth \
-  --driver metal --metal-api-key=$API_KEY --metal-os=ubuntu_16_04 --metal-project-id=$PROJECT --metal-facility-code "ewr1" --metal-plan "baremetal_0"
-  
+  --driver metal --metal-api-key=$API_KEY --metal-os=ubuntu_16_04 --metal-project-id=$PROJECT --metal-metro-code "ny" --metal-plan "c3.small.x86"
+
 Creating CA: /home/alex/.docker/machine/certs/ca.pem
 Creating client certificate: /home/alex/.docker/machine/certs/cert.pem
 Running pre-create checks...
 Creating machine...
 (sloth) Creating SSH key...
 (sloth) Provisioning Equinix Metal server...
-(sloth) Created device ID $PROJECT, IP address 147.x.x.x
+(sloth) Created device ID $DEVICE, IP address 147.x.x.x
 (sloth) Waiting for Provisioning...
 Waiting for machine to be running, this may take a few minutes...
 Detecting operating system of created instance...
@@ -66,11 +84,11 @@ At this point you can now `docker-machine env sloth` and then start using your D
 
 Pre-reqs: `docker-machine` and `make`
 
-* Install the Golang SDK [https://golang.org/dl/](https://golang.org/dl/) (at least 1.11 required for [modules](https://github.com/golang/go/wiki/Modules) support
+- Install the Golang SDK [https://golang.org/dl/](https://golang.org/dl/) (at least 1.11 required for [modules](https://github.com/golang/go/wiki/Modules) support
 
-* Download the source-code with `git clone http://github.com/equinix/docker-machine-driver-metal.git`
+- Download the source-code with `git clone http://github.com/equinix/docker-machine-driver-metal.git`
 
-* Build and install the driver:
+- Build and install the driver:
 
 ```sh
 cd docker-machine-driver-metal
@@ -99,7 +117,7 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 Releases are handled by [GitHub Workflows](.github/workflows/release.yml) and [goreleaser](.goreleaser.yml).
 
-To push a new release, checkout the commit that you want released and: `make tag version=v0.2.3`.  Robots handle the rest.
+To push a new release, checkout the commit that you want released and: `make tag version=v0.2.3`. Robots handle the rest.
 
 Maintainers should verify that the release notes convey to users all of the notable changes between releases, in a human readable way.
 The format for each release should be based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
