@@ -3,7 +3,9 @@
 package metal
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -18,6 +20,7 @@ import (
 	"github.com/docker/machine/libmachine/ssh"
 	"github.com/docker/machine/libmachine/state"
 	"github.com/packethost/packngo"
+	"sigs.k8s.io/yaml"
 )
 
 const (
@@ -149,26 +152,60 @@ func (d *Driver) DriverName() string {
 	return "metal"
 }
 
+func (d *Driver) setConfigFromFile() error {
+	configFile := getConfigFile()
+
+	config := metalSnakeConfig{}
+
+	if raw, err := ioutil.ReadFile(configFile); err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil
+		}
+		return err
+	} else if jsonErr := yaml.Unmarshal(raw, &config); jsonErr != nil {
+		return jsonErr
+	}
+	d.Plan = config.Plan
+	d.ApiKey = config.AuthToken
+	if config.Token != "" {
+		d.ApiKey = config.Token
+	}
+	d.Facility = config.Facility
+	d.Metro = config.Metro
+	d.OperatingSystem = config.OS
+	d.ProjectID = config.ProjectID
+	return nil
+}
+
 func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
-	if strings.Contains(flags.String("metal-os"), "coreos") {
+	if err := d.setConfigFromFile(); err != nil {
+		return err
+	}
+	// override config file values with command-line values
+	for k, p := range map[string]*string{
+		"metal-os":            &d.OperatingSystem,
+		"metal-api-key":       &d.ApiKey,
+		"metal-project-id":    &d.ProjectID,
+		"metal-metro-code":    &d.Metro,
+		"metal-facility-code": &d.Facility,
+		"metal-plan":          &d.Plan,
+	} {
+		if v := flags.String(k); v != "" {
+			*p = v
+		}
+	}
+
+	if strings.Contains(d.OperatingSystem, "coreos") {
 		d.SSHUser = "core"
 	}
-	if strings.Contains(flags.String("metal-os"), "rancher") {
+	if strings.Contains(d.OperatingSystem, "rancher") {
 		d.SSHUser = "rancher"
 	}
 
-	d.ApiKey = flags.String("metal-api-key")
-	d.ProjectID = flags.String("metal-project-id")
-	d.OperatingSystem = flags.String("metal-os")
-	d.Facility = flags.String("metal-facility-code")
-	d.Metro = flags.String("metal-metro-code")
 	d.BillingCycle = flags.String("metal-billing-cycle")
 	d.UserAgentPrefix = flags.String("metal-ua-prefix")
 	d.UserDataFile = flags.String("metal-userdata")
-
-	d.Plan = flags.String("metal-plan")
 	d.HardwareReserverationID = flags.String("metal-hw-reservation-id")
-
 	d.SpotInstance = flags.Bool("metal-spot-instance")
 
 	if d.SpotInstance {
