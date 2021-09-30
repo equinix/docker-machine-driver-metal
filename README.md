@@ -23,7 +23,7 @@ docker-machine create --driver metal
 You can find the supported arguments by running `docker-machine create -d metal --help` (Equinix Metal specific arguments are shown below):
 
 | Argument                    | Default        | Description                                                                  | Environment | Config     |
-| --------------------------- | -------------- | ---------------------------------------------------------------------------- | ------------------------ |
+| --------------------------- | -------------- | ---------------------------------------------------------------------------- | ----------- | ---------- |
 | `--metal-api-key`           |                | Equinix Metal API Key                                                        | `METAL_AUTH_TOKEN`       | `token` or `auth-token`
 | `--metal-billing-cycle`     | `hourly`       | Equinix Metal billing cycle, hourly or monthly                               | `METAL_BILLING_CYCLE`    |
 | `--metal-facility-code`     |                | Equinix Metal facility code                                                  | `METAL_FACILITY_CODE`    |`facility`
