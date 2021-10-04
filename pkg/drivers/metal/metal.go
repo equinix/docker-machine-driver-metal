@@ -462,21 +462,28 @@ func (d *Driver) Stop() error {
 	return err
 }
 
+func ignoreStatusCodes(err error, codes ...int) error {
+	e, ok := err.(*packngo.ErrorResponse)
+	if !ok || e.Response == nil {
+		return err
+	}
+
+	for _, c := range codes {
+		if e.Response.StatusCode == c {
+			return nil
+		}
+	}
+	return err
+}
+
 func (d *Driver) Remove() error {
 	client := d.getClient()
-
-	if _, err := client.SSHKeys.Delete(d.SSHKeyID); err != nil {
-		if er, ok := err.(*packngo.ErrorResponse); !ok || er.Response.StatusCode != 404 {
-			return err
-		}
+	if _, err := client.SSHKeys.Delete(d.SSHKeyID); ignoreStatusCodes(err, 403, 404) != nil {
+		return err
 	}
 
-	if _, err := client.Devices.Delete(d.DeviceID, false); err != nil {
-		if er, ok := err.(*packngo.ErrorResponse); !ok || er.Response.StatusCode != 404 {
-			return err
-		}
-	}
-	return nil
+	_, err := client.Devices.Delete(d.DeviceID, false)
+	return ignoreStatusCodes(err, 403, 404)
 }
 
 func (d *Driver) Restart() error {
