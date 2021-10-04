@@ -34,9 +34,33 @@ var (
 	// version is set by goreleaser at build time
 	version = "devel"
 
+	driverName = "metal"
+
+	envAuthToken       = "%s_AUTH_TOKEN"
+	envProjectID       = "%s_PROJECT_ID"
+	envOS              = "%s_OS"
+	envFacilityCode    = "%s_FACILITY_CODE"
+	envMetroCode       = "%s_METRO_CODE"
+	envPlan            = "%s_PLAN"
+	envHwId            = "%s_HW_ID"
+	envBillingCycle    = "%s_BILLING_CYCLE"
+	envUserdata        = "%s_USERDATA"
+	envSpotInstance    = "%s_SPOT_INSTANCE"
+	envSpotPriceMax    = "%s_SPOT_PRICE_MAX"
+	envTerminationTime = "%s_TERMINATION_TIME"
+	envUAPrefix        = "%s_UA_PREFIX"
+
 	// build time check that the Driver type implements the Driver interface
 	_ drivers.Driver = &Driver{}
 )
+
+func prefix(f string) string {
+	return driverName + f
+}
+
+func envPrefix(f string) string {
+	return fmt.Sprintf(f, strings.ToUpper(driverName))
+}
 
 type Driver struct {
 	*drivers.BaseDriver
@@ -74,82 +98,82 @@ func NewDriver(hostName, storePath string) *Driver {
 func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 	return []mcnflag.Flag{
 		mcnflag.StringFlag{
-			Name:   "metal-api-key",
+			Name:   prefix("-api-key"),
 			Usage:  "Equinix Metal API Key",
-			EnvVar: "METAL_AUTH_TOKEN",
+			EnvVar: envPrefix(envAuthToken),
 		},
 		mcnflag.StringFlag{
-			Name:   "metal-project-id",
+			Name:   prefix("-project-id"),
 			Usage:  "Equinix Metal Project Id",
-			EnvVar: "METAL_PROJECT_ID",
+			EnvVar: envPrefix(envProjectID),
 		},
 		mcnflag.StringFlag{
-			Name:   "metal-os",
+			Name:   prefix("-os"),
 			Usage:  "Equinix Metal OS",
 			Value:  defaultOS,
-			EnvVar: "METAL_OS",
+			EnvVar: envPrefix(envOS),
 		},
 		mcnflag.StringFlag{
-			Name:   "metal-facility-code",
+			Name:   prefix("-facility-code"),
 			Usage:  "Equinix Metal facility code",
-			EnvVar: "METAL_FACILITY_CODE",
+			EnvVar: envPrefix(envFacilityCode),
 		},
 		mcnflag.StringFlag{
-			Name:   "metal-metro-code",
+			Name:   prefix("-metro-code"),
 			Usage:  fmt.Sprintf("Equinix Metal metro code (%q is used if empty and facility is not set)", defaultMetro),
-			EnvVar: "METAL_METRO_CODE",
+			EnvVar: envPrefix(envMetroCode),
 			// We don't set Value because Facility was previously required and
 			// defaulted. Existing configurations with "Facility" should not
 			// break. Setting a default metro value would break those
 			// configurations.
 		},
 		mcnflag.StringFlag{
-			Name:   "metal-plan",
+			Name:   prefix("-plan"),
 			Usage:  "Equinix Metal Server Plan",
 			Value:  "c3.small.x86",
-			EnvVar: "METAL_PLAN",
+			EnvVar: envPrefix(envPlan),
 		},
 		mcnflag.StringFlag{
-			Name:   "metal-hw-reservation-id",
+			Name:   prefix("-hw-reservation-id"),
 			Usage:  "Equinix Metal Reserved hardware ID",
-			EnvVar: "METAL_HW_ID",
+			EnvVar: envPrefix(envHwId),
 		},
 		mcnflag.StringFlag{
-			Name:   "metal-billing-cycle",
+			Name:   prefix("-billing-cycle"),
 			Usage:  "Equinix Metal billing cycle, hourly or monthly",
 			Value:  "hourly",
-			EnvVar: "METAL_BILLING_CYCLE",
+			EnvVar: envPrefix(envBillingCycle),
 		},
 		mcnflag.StringFlag{
-			Name:   "metal-userdata",
+			Name:   prefix("-userdata"),
 			Usage:  "Path to file with cloud-init user-data",
-			EnvVar: "METAL_USERDATA",
+			EnvVar: envPrefix(envUserdata),
 		},
 		mcnflag.BoolFlag{
-			Name:   "metal-spot-instance",
+			Name:   prefix("-spot-instance"),
 			Usage:  "Request a Equinix Metal Spot Instance",
-			EnvVar: "METAL_SPOT_INSTANCE",
+			EnvVar: envPrefix(envSpotInstance),
 		},
 		mcnflag.StringFlag{
-			Name:   "metal-spot-price-max",
+			Name:   prefix("-spot-price-max"),
 			Usage:  "The maximum Equinix Metal Spot Price",
-			EnvVar: "METAL_SPOT_PRICE_MAX",
+			EnvVar: envPrefix(envSpotPriceMax),
 		},
 		mcnflag.StringFlag{
-			Name:   "metal-termination-time",
+			Name:   prefix("-termination-time"),
 			Usage:  "The Equinix Metal Instance Termination Time",
-			EnvVar: "METAL_TERMINATION_TIME",
+			EnvVar: envPrefix(envTerminationTime),
 		},
 		mcnflag.StringFlag{
-			EnvVar: "METAL_UA_PREFIX",
-			Name:   "metal-ua-prefix",
-			Usage:  "Prefix the User-Agent in Equinix Metal API calls with some 'product/version'",
+			Name:   prefix("-ua-prefix"),
+			Usage:  fmt.Sprintf("Prefix the User-Agent in Equinix Metal API calls with some 'product/version' %s %s", version, driverName),
+			EnvVar: envPrefix(envUAPrefix),
 		},
 	}
 }
 
 func (d *Driver) DriverName() string {
-	return "metal"
+	return driverName
 }
 
 func (d *Driver) setConfigFromFile() error {
@@ -183,12 +207,12 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	}
 	// override config file values with command-line values
 	for k, p := range map[string]*string{
-		"metal-os":            &d.OperatingSystem,
-		"metal-api-key":       &d.ApiKey,
-		"metal-project-id":    &d.ProjectID,
-		"metal-metro-code":    &d.Metro,
-		"metal-facility-code": &d.Facility,
-		"metal-plan":          &d.Plan,
+		prefix("-os"):            &d.OperatingSystem,
+		prefix("-api-key"):       &d.ApiKey,
+		prefix("-project-id"):    &d.ProjectID,
+		prefix("-metro-code"):    &d.Metro,
+		prefix("-facility-code"): &d.Facility,
+		prefix("-plan"):          &d.Plan,
 	} {
 		if v := flags.String(k); v != "" {
 			*p = v
@@ -202,14 +226,14 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 		d.SSHUser = "rancher"
 	}
 
-	d.BillingCycle = flags.String("metal-billing-cycle")
-	d.UserAgentPrefix = flags.String("metal-ua-prefix")
-	d.UserDataFile = flags.String("metal-userdata")
-	d.HardwareReserverationID = flags.String("metal-hw-reservation-id")
-	d.SpotInstance = flags.Bool("metal-spot-instance")
+	d.BillingCycle = flags.String(prefix("-billing-cycle"))
+	d.UserAgentPrefix = flags.String(prefix("-ua-prefix"))
+	d.UserDataFile = flags.String(prefix("-userdata"))
+	d.HardwareReserverationID = flags.String(prefix("-hw-reservation-id"))
+	d.SpotInstance = flags.Bool(prefix("-spot-instance"))
 
 	if d.SpotInstance {
-		SpotPriceMax := flags.String("metal-spot-price-max")
+		SpotPriceMax := flags.String(prefix("-spot-price-max"))
 		if SpotPriceMax == "" {
 			d.SpotPriceMax = -1
 		} else {
@@ -220,7 +244,7 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 			d.SpotPriceMax = SpotPriceMax
 		}
 
-		TerminationTime := flags.String("metal-termination-time")
+		TerminationTime := flags.String(prefix("-termination-time"))
 		if TerminationTime == "" {
 			d.TerminationTime = nil
 		} else {
@@ -229,17 +253,17 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 				return err
 			}
 			if Timestamp <= time.Now().Unix() {
-				return fmt.Errorf("--metal-termination-time cannot be in the past")
+				return fmt.Errorf("--%s-termination-time cannot be in the past", driverName)
 			}
 			d.TerminationTime = &packngo.Timestamp{Time: time.Unix(Timestamp, 0)}
 		}
 	}
 
 	if d.ApiKey == "" {
-		return fmt.Errorf("metal driver requires the --metal-api-key option")
+		return fmt.Errorf("%s driver requires the --%s-api-key option", driverName, driverName)
 	}
 	if d.ProjectID == "" {
-		return fmt.Errorf("metal driver requires the --metal-project-id option")
+		return fmt.Errorf("%s driver requires the --%s-project-id option", driverName, driverName)
 	}
 
 	return nil
@@ -261,7 +285,7 @@ func (d *Driver) PreCreateCheck() error {
 		return err
 	}
 	if !stringInSlice(d.OperatingSystem, flavors) {
-		return fmt.Errorf("specified --metal-os not one of %v", strings.Join(flavors, ", "))
+		return fmt.Errorf("specified --%s-os not one of %v", driverName, strings.Join(flavors, ", "))
 	}
 
 	if d.Metro == "" && d.Facility == "" {
@@ -550,7 +574,7 @@ func validateFacility(client *packngo.Client, facility string) error {
 		}
 	}
 
-	return fmt.Errorf("metal requires a valid facility")
+	return fmt.Errorf("%s requires a valid facility", driverName)
 }
 
 func validateMetro(client *packngo.Client, metro string) error {
@@ -564,7 +588,7 @@ func validateMetro(client *packngo.Client, metro string) error {
 		}
 	}
 
-	return fmt.Errorf("metal requires a valid metro")
+	return fmt.Errorf("%s requires a valid metro", driverName)
 }
 
 func stringInSlice(a string, list []string) bool {
