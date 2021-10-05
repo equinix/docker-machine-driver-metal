@@ -40,6 +40,7 @@ var (
 	driverName = "metal"
 
 	envAuthToken       envSuffix = "_AUTH_TOKEN"
+	envApiKey          envSuffix = "_API_KEY"
 	envProjectID       envSuffix = "_PROJECT_ID"
 	envOS              envSuffix = "_OS"
 	envFacilityCode    envSuffix = "_FACILITY_CODE"
@@ -53,7 +54,8 @@ var (
 	envTerminationTime envSuffix = "_TERMINATION_TIME"
 	envUAPrefix        envSuffix = "_UA_PREFIX"
 
-	argAuthToken       argSuffix = "-api-key"
+	argAuthToken       argSuffix = "-auth-token"
+	argApiKey          argSuffix = "-api-key"
 	argProjectID       argSuffix = "-project-id"
 	argOS              argSuffix = "-os"
 	argFacilityCode    argSuffix = "-facility-code"
@@ -116,8 +118,13 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 	return []mcnflag.Flag{
 		mcnflag.StringFlag{
 			Name:   argPrefix(argAuthToken),
-			Usage:  "Equinix Metal API Key",
+			Usage:  "Equinix Metal Authentication Token",
 			EnvVar: envPrefix(envAuthToken),
+		},
+		mcnflag.StringFlag{
+			Name:   argPrefix(argApiKey),
+			Usage:  "Authentication Key (deprecated name, use Auth Token)",
+			EnvVar: envPrefix(envApiKey),
 		},
 		mcnflag.StringFlag{
 			Name:   argPrefix(argProjectID),
@@ -236,6 +243,18 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 		}
 	}
 
+	oldApiKey := flags.String(argPrefix(argApiKey))
+
+	if d.ApiKey == "" {
+		d.ApiKey = oldApiKey
+
+		if d.ApiKey == "" {
+			return fmt.Errorf("%s driver requires the --%s option", driverName, argPrefix(argAuthToken))
+		}
+	} else if oldApiKey != "" {
+		log.Warnf("ignoring API Key setting (%s, %s)", argPrefix(argApiKey), envPrefix(envApiKey))
+	}
+
 	if strings.Contains(d.OperatingSystem, "coreos") {
 		d.SSHUser = "core"
 	}
@@ -276,9 +295,6 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 		}
 	}
 
-	if d.ApiKey == "" {
-		return fmt.Errorf("%s driver requires the --%s option", driverName, argPrefix(argAuthToken))
-	}
 	if d.ProjectID == "" {
 		return fmt.Errorf("%s driver requires the --%s option", driverName, argPrefix(argProjectID))
 	}
