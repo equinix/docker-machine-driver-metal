@@ -386,8 +386,11 @@ func (d *Driver) Create() error {
 	log.Info("Provisioning Equinix Metal server...")
 	newDevice, _, err := client.Devices.Create(createRequest)
 	if err != nil {
-		//cleanup ssh keys if device faild
+		log.Errorf("device could not be created: %s", err)
+
+		//cleanup ssh keys if device failed
 		if _, err := client.SSHKeys.Delete(d.SSHKeyID); ignoreStatusCodes(err, http.StatusForbidden, http.StatusNotFound) != nil {
+			log.Errorf("ssh-key could not be deleted: %s", err)
 			return err
 		}
 		return err
