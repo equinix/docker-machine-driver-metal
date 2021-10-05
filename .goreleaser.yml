@@ -4,12 +4,41 @@ before:
   hooks:
    - go mod download
 builds:
-- env:
+- id: docker-machine-driver-metal
+  env:
     - CGO_ENABLED=0
     - GO111MODULE=on
   binary: docker-machine-driver-metal
   ldflags:
-   - -X github.com/equinix/docker-machine-driver-metal/pkg/drivers/metal/metal.version={{.Version}}
+   - -s -w -X github.com/equinix/docker-machine-driver-metal/pkg/drivers/metal.version={{.Version}}
+  goos:
+    - windows
+    - darwin
+    - linux
+  goarch:
+    - amd64
+    - arm
+    - arm64
+  goarm:
+    - 6
+    - 7
+  ignore:
+    - goos: windows
+      goarch: arm
+    - goos: windows
+      goarch: arm64
+    - goos: darwin
+      goarch: arm64
+    - goos: darwin
+      goarch: arm
+- id: docker-machine-driver-packet
+  env:
+    - CGO_ENABLED=0
+    - GO111MODULE=on
+  binary: docker-machine-driver-packet
+  ldflags:
+   - -s -w -X github.com/equinix/docker-machine-driver-metal/pkg/drivers/metal.version={{.Version}}
+   - -s -w -X github.com/equinix/docker-machine-driver-metal/pkg/drivers/metal.driverName=packet
   goos:
     - windows
     - darwin

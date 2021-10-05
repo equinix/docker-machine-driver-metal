@@ -30,13 +30,56 @@ const (
 	defaultMetro    = "dc"
 )
 
+type envSuffix string
+type argSuffix string
+
 var (
 	// version is set by goreleaser at build time
 	version = "devel"
 
+	driverName = "metal"
+
+	envAuthToken       envSuffix = "_AUTH_TOKEN"
+	envApiKey          envSuffix = "_API_KEY"
+	envProjectID       envSuffix = "_PROJECT_ID"
+	envOS              envSuffix = "_OS"
+	envFacilityCode    envSuffix = "_FACILITY_CODE"
+	envMetroCode       envSuffix = "_METRO_CODE"
+	envPlan            envSuffix = "_PLAN"
+	envHwId            envSuffix = "_HW_ID"
+	envBillingCycle    envSuffix = "_BILLING_CYCLE"
+	envUserdata        envSuffix = "_USERDATA"
+	envSpotInstance    envSuffix = "_SPOT_INSTANCE"
+	envSpotPriceMax    envSuffix = "_SPOT_PRICE_MAX"
+	envTerminationTime envSuffix = "_TERMINATION_TIME"
+	envUAPrefix        envSuffix = "_UA_PREFIX"
+
+	argAuthToken       argSuffix = "-auth-token"
+	argApiKey          argSuffix = "-api-key"
+	argProjectID       argSuffix = "-project-id"
+	argOS              argSuffix = "-os"
+	argFacilityCode    argSuffix = "-facility-code"
+	argMetroCode       argSuffix = "-metro-code"
+	argPlan            argSuffix = "-plan"
+	argHwId            argSuffix = "-hw-reservation-id"
+	argBillingCycle    argSuffix = "-billing-cycle"
+	argUserdata        argSuffix = "-userdata"
+	argSpotInstance    argSuffix = "-spot-instance"
+	argSpotPriceMax    argSuffix = "-spot-price-max"
+	argTerminationTime argSuffix = "-termination-time"
+	argUAPrefix        argSuffix = "-ua-prefix"
+
 	// build time check that the Driver type implements the Driver interface
 	_ drivers.Driver = &Driver{}
 )
+
+func argPrefix(f argSuffix) string {
+	return driverName + string(f)
+}
+
+func envPrefix(f envSuffix) string {
+	return strings.ToUpper(driverName) + string(f)
+}
 
 type Driver struct {
 	*drivers.BaseDriver
@@ -74,82 +117,87 @@ func NewDriver(hostName, storePath string) *Driver {
 func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 	return []mcnflag.Flag{
 		mcnflag.StringFlag{
-			Name:   "metal-api-key",
-			Usage:  "Equinix Metal API Key",
-			EnvVar: "METAL_AUTH_TOKEN",
+			Name:   argPrefix(argAuthToken),
+			Usage:  "Equinix Metal Authentication Token",
+			EnvVar: envPrefix(envAuthToken),
 		},
 		mcnflag.StringFlag{
-			Name:   "metal-project-id",
+			Name:   argPrefix(argApiKey),
+			Usage:  "Authentication Key (deprecated name, use Auth Token)",
+			EnvVar: envPrefix(envApiKey),
+		},
+		mcnflag.StringFlag{
+			Name:   argPrefix(argProjectID),
 			Usage:  "Equinix Metal Project Id",
-			EnvVar: "METAL_PROJECT_ID",
+			EnvVar: envPrefix(envProjectID),
 		},
 		mcnflag.StringFlag{
-			Name:   "metal-os",
+			Name:   argPrefix(argOS),
 			Usage:  "Equinix Metal OS",
 			Value:  defaultOS,
-			EnvVar: "METAL_OS",
+			EnvVar: envPrefix(envOS),
 		},
 		mcnflag.StringFlag{
-			Name:   "metal-facility-code",
+			Name:   argPrefix(argFacilityCode),
 			Usage:  "Equinix Metal facility code",
-			EnvVar: "METAL_FACILITY_CODE",
+			EnvVar: envPrefix(envFacilityCode),
 		},
 		mcnflag.StringFlag{
-			Name:   "metal-metro-code",
+			Name:   argPrefix(argMetroCode),
 			Usage:  fmt.Sprintf("Equinix Metal metro code (%q is used if empty and facility is not set)", defaultMetro),
-			EnvVar: "METAL_METRO_CODE",
+			EnvVar: envPrefix(envMetroCode),
 			// We don't set Value because Facility was previously required and
 			// defaulted. Existing configurations with "Facility" should not
 			// break. Setting a default metro value would break those
 			// configurations.
 		},
 		mcnflag.StringFlag{
-			Name:   "metal-plan",
+			Name:   argPrefix(argPlan),
 			Usage:  "Equinix Metal Server Plan",
 			Value:  "c3.small.x86",
-			EnvVar: "METAL_PLAN",
+			EnvVar: envPrefix(envPlan),
 		},
 		mcnflag.StringFlag{
-			Name:   "metal-hw-reservation-id",
+			Name:   argPrefix(argHwId),
 			Usage:  "Equinix Metal Reserved hardware ID",
-			EnvVar: "METAL_HW_ID",
+			EnvVar: envPrefix(envHwId),
 		},
 		mcnflag.StringFlag{
-			Name:   "metal-billing-cycle",
+			Name:   argPrefix(argBillingCycle),
 			Usage:  "Equinix Metal billing cycle, hourly or monthly",
 			Value:  "hourly",
-			EnvVar: "METAL_BILLING_CYCLE",
+			EnvVar: envPrefix(envBillingCycle),
 		},
 		mcnflag.StringFlag{
-			Name:   "metal-userdata",
+			Name:   argPrefix(argUserdata),
 			Usage:  "Path to file with cloud-init user-data",
-			EnvVar: "METAL_USERDATA",
+			EnvVar: envPrefix(envUserdata),
 		},
 		mcnflag.BoolFlag{
-			Name:   "metal-spot-instance",
+			Name:   argPrefix(argSpotInstance),
 			Usage:  "Request a Equinix Metal Spot Instance",
-			EnvVar: "METAL_SPOT_INSTANCE",
+			EnvVar: envPrefix(envSpotInstance),
 		},
 		mcnflag.StringFlag{
-			Name:   "metal-spot-price-max",
+			Name:   argPrefix(argSpotPriceMax),
 			Usage:  "The maximum Equinix Metal Spot Price",
-			EnvVar: "METAL_SPOT_PRICE_MAX",
+			EnvVar: envPrefix(envSpotPriceMax),
 		},
 		mcnflag.StringFlag{
-			Name:   "metal-termination-time",
+			Name:   argPrefix(argTerminationTime),
 			Usage:  "The Equinix Metal Instance Termination Time",
-			EnvVar: "METAL_TERMINATION_TIME",
+			EnvVar: envPrefix(envTerminationTime),
 		},
 		mcnflag.StringFlag{
-			EnvVar: "METAL_UA_PREFIX",
-			Name:   "metal-ua-prefix",
-			Usage:  "Prefix the User-Agent in Equinix Metal API calls with some 'product/version'",
+			Name:   argPrefix(argUAPrefix),
+			Usage:  fmt.Sprintf("Prefix the User-Agent in Equinix Metal API calls with some 'product/version' %s %s", version, driverName),
+			EnvVar: envPrefix(envUAPrefix),
 		},
 	}
 }
 
 func (d *Driver) DriverName() string {
-	return "metal"
+	return driverName
 }
 
 func (d *Driver) setConfigFromFile() error {
@@ -183,16 +231,28 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	}
 	// override config file values with command-line values
 	for k, p := range map[string]*string{
-		"metal-os":            &d.OperatingSystem,
-		"metal-api-key":       &d.ApiKey,
-		"metal-project-id":    &d.ProjectID,
-		"metal-metro-code":    &d.Metro,
-		"metal-facility-code": &d.Facility,
-		"metal-plan":          &d.Plan,
+		argPrefix(argOS):           &d.OperatingSystem,
+		argPrefix(argAuthToken):    &d.ApiKey,
+		argPrefix(argProjectID):    &d.ProjectID,
+		argPrefix(argMetroCode):    &d.Metro,
+		argPrefix(argFacilityCode): &d.Facility,
+		argPrefix(argPlan):         &d.Plan,
 	} {
 		if v := flags.String(k); v != "" {
 			*p = v
 		}
+	}
+
+	oldApiKey := flags.String(argPrefix(argApiKey))
+
+	if d.ApiKey == "" {
+		d.ApiKey = oldApiKey
+
+		if d.ApiKey == "" {
+			return fmt.Errorf("%s driver requires the --%s option", driverName, argPrefix(argAuthToken))
+		}
+	} else if oldApiKey != "" {
+		log.Warnf("ignoring API Key setting (%s, %s)", argPrefix(argApiKey), envPrefix(envApiKey))
 	}
 
 	if strings.Contains(d.OperatingSystem, "coreos") {
@@ -202,14 +262,14 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 		d.SSHUser = "rancher"
 	}
 
-	d.BillingCycle = flags.String("metal-billing-cycle")
-	d.UserAgentPrefix = flags.String("metal-ua-prefix")
-	d.UserDataFile = flags.String("metal-userdata")
-	d.HardwareReserverationID = flags.String("metal-hw-reservation-id")
-	d.SpotInstance = flags.Bool("metal-spot-instance")
+	d.BillingCycle = flags.String(argPrefix(argBillingCycle))
+	d.UserAgentPrefix = flags.String(argPrefix(argUAPrefix))
+	d.UserDataFile = flags.String(argPrefix(argUserdata))
+	d.HardwareReserverationID = flags.String(argPrefix(argHwId))
+	d.SpotInstance = flags.Bool(argPrefix(argSpotInstance))
 
 	if d.SpotInstance {
-		SpotPriceMax := flags.String("metal-spot-price-max")
+		SpotPriceMax := flags.String(argPrefix(argSpotPriceMax))
 		if SpotPriceMax == "" {
 			d.SpotPriceMax = -1
 		} else {
@@ -220,7 +280,7 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 			d.SpotPriceMax = SpotPriceMax
 		}
 
-		TerminationTime := flags.String("metal-termination-time")
+		TerminationTime := flags.String(argPrefix(argTerminationTime))
 		if TerminationTime == "" {
 			d.TerminationTime = nil
 		} else {
@@ -229,17 +289,14 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 				return err
 			}
 			if Timestamp <= time.Now().Unix() {
-				return fmt.Errorf("--metal-termination-time cannot be in the past")
+				return fmt.Errorf("--%s cannot be in the past", argPrefix(argTerminationTime))
 			}
 			d.TerminationTime = &packngo.Timestamp{Time: time.Unix(Timestamp, 0)}
 		}
 	}
 
-	if d.ApiKey == "" {
-		return fmt.Errorf("metal driver requires the --metal-api-key option")
-	}
 	if d.ProjectID == "" {
-		return fmt.Errorf("metal driver requires the --metal-project-id option")
+		return fmt.Errorf("%s driver requires the --%s option", driverName, argPrefix(argProjectID))
 	}
 
 	return nil
@@ -261,7 +318,7 @@ func (d *Driver) PreCreateCheck() error {
 		return err
 	}
 	if !stringInSlice(d.OperatingSystem, flavors) {
-		return fmt.Errorf("specified --metal-os not one of %v", strings.Join(flavors, ", "))
+		return fmt.Errorf("specified --%s not one of %v", argPrefix(argOS), strings.Join(flavors, ", "))
 	}
 
 	if d.Metro == "" && d.Facility == "" {
@@ -329,11 +386,12 @@ func (d *Driver) Create() error {
 	log.Info("Provisioning Equinix Metal server...")
 	newDevice, _, err := client.Devices.Create(createRequest)
 	if err != nil {
-		//cleanup ssh keys if device faild
-		if _, err := client.SSHKeys.Delete(d.SSHKeyID); err != nil {
-			if er, ok := err.(*packngo.ErrorResponse); !ok || er.Response.StatusCode != http.StatusNotFound {
-				return err
-			}
+		log.Errorf("device could not be created: %s", err)
+
+		//cleanup ssh keys if device failed
+		if _, err := client.SSHKeys.Delete(d.SSHKeyID); ignoreStatusCodes(err, http.StatusForbidden, http.StatusNotFound) != nil {
+			log.Errorf("ssh-key could not be deleted: %s", err)
+			return err
 		}
 		return err
 	}
@@ -462,21 +520,28 @@ func (d *Driver) Stop() error {
 	return err
 }
 
+func ignoreStatusCodes(err error, codes ...int) error {
+	e, ok := err.(*packngo.ErrorResponse)
+	if !ok || e.Response == nil {
+		return err
+	}
+
+	for _, c := range codes {
+		if e.Response.StatusCode == c {
+			return nil
+		}
+	}
+	return err
+}
+
 func (d *Driver) Remove() error {
 	client := d.getClient()
-
-	if _, err := client.SSHKeys.Delete(d.SSHKeyID); err != nil {
-		if er, ok := err.(*packngo.ErrorResponse); !ok || er.Response.StatusCode != 404 {
-			return err
-		}
+	if _, err := client.SSHKeys.Delete(d.SSHKeyID); ignoreStatusCodes(err, http.StatusForbidden, http.StatusNotFound) != nil {
+		return err
 	}
 
-	if _, err := client.Devices.Delete(d.DeviceID, false); err != nil {
-		if er, ok := err.(*packngo.ErrorResponse); !ok || er.Response.StatusCode != 404 {
-			return err
-		}
-	}
-	return nil
+	_, err := client.Devices.Delete(d.DeviceID, false)
+	return ignoreStatusCodes(err, http.StatusForbidden, http.StatusNotFound)
 }
 
 func (d *Driver) Restart() error {
@@ -543,7 +608,7 @@ func validateFacility(client *packngo.Client, facility string) error {
 		}
 	}
 
-	return fmt.Errorf("metal requires a valid facility")
+	return fmt.Errorf("%s requires a valid facility", driverName)
 }
 
 func validateMetro(client *packngo.Client, metro string) error {
@@ -557,7 +622,7 @@ func validateMetro(client *packngo.Client, metro string) error {
 		}
 	}
 
-	return fmt.Errorf("metal requires a valid metro")
+	return fmt.Errorf("%s requires a valid metro", driverName)
 }
 
 func stringInSlice(a string, list []string) bool {

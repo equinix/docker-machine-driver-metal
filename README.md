@@ -22,16 +22,17 @@ docker-machine create --driver metal
 
 You can find the supported arguments by running `docker-machine create -d metal --help` (Equinix Metal specific arguments are shown below):
 
-| Argument                    | Default        | Description                                                                  | Environment | Config     |
-| --------------------------- | -------------- | ---------------------------------------------------------------------------- | ----------- | ---------- |
-| `--metal-api-key`           |                | Equinix Metal API Key                                                        | `METAL_AUTH_TOKEN`       | `token` or `auth-token`
+| Argument                    | Default        | Description                                                                  | Environment              | Config                  |
+| --------------------------- | -------------- | ---------------------------------------------------------------------------- | ------------------------ | ----------------------- |
+| `--metal-api-key`           |                | Deprecated API Key flag (use auth token)                                    | `METAL_API_KEY`          |
+| `--metal-auth-token`        |                | Equinix Metal Authentication Token                                           | `METAL_AUTH_TOKEN`       | `token` or `auth-token` |
 | `--metal-billing-cycle`     | `hourly`       | Equinix Metal billing cycle, hourly or monthly                               | `METAL_BILLING_CYCLE`    |
-| `--metal-facility-code`     |                | Equinix Metal facility code                                                  | `METAL_FACILITY_CODE`    |`facility`
+| `--metal-facility-code`     |                | Equinix Metal facility code                                                  | `METAL_FACILITY_CODE`    | `facility`              |
 | `--metal-hw-reservation-id` |                | Equinix Metal Reserved hardware ID                                           | `METAL_HW_ID`            |
-| `--metal-metro-code`        |                | Equinix Metal metro code ("dc" is used if empty and facility is not set)     | `METAL_METRO_CODE`       |`metro`
-| `--metal-os`                | `ubuntu_20_04` | Equinix Metal OS                                                             | `METAL_OS`               |`operating-system`
-| `--metal-plan`              | `c3.small.x86` | Equinix Metal Server Plan                                                    | `METAL_PLAN`             |`plan`
-| `--metal-project-id`        |                | Equinix Metal Project Id                                                     | `METAL_PROJECT_ID`       |`project`
+| `--metal-metro-code`        |                | Equinix Metal metro code ("dc" is used if empty and facility is not set)     | `METAL_METRO_CODE`       | `metro`                 |
+| `--metal-os`                | `ubuntu_20_04` | Equinix Metal OS                                                             | `METAL_OS`               | `operating-system`      |
+| `--metal-plan`              | `c3.small.x86` | Equinix Metal Server Plan                                                    | `METAL_PLAN`             | `plan`                  |
+| `--metal-project-id`        |                | Equinix Metal Project Id                                                     | `METAL_PROJECT_ID`       | `project`               |
 | `--metal-spot-instance`     |                | Request a Equinix Metal Spot Instance                                        | `METAL_SPOT_INSTANCE`    |
 | `--metal-spot-price-max`    |                | The maximum Equinix Metal Spot Price                                         | `METAL_SPOT_PRICE_MAX`   |
 | `--metal-termination-time`  |                | The Equinix Metal Instance Termination Time                                  | `METAL_TERMINATION_TIME` |
@@ -39,6 +40,8 @@ You can find the supported arguments by running `docker-machine create -d metal 
 | `--metal-userdata`          |                | Path to file with cloud-init user-data                                       | `METAL_USERDATA`         |
 
 Where denoted, values may be loaded from the environment or from the `~/.config/equinix/metal.yaml` file which can be created with the [Equinix Metal CLI](https://github.com/equinix/metal-cli#metal-cli).
+
+In order to support existing installations, a Packet branded binary is also available with each release. When the `packet` binary is used, all `METAL` environment variables and `metal` arguments should be substituted for `PACKET` and `packet`, respectively.
 
 ### Example usage
 
@@ -108,7 +111,7 @@ To monitor the Docker debugging details and the Equinix Metal API calls:
 go build
 PACKNGO_DEBUG=1 PATH=`pwd`:$PATH docker-machine \
   --debug create -d metal \
-  --metal-api-key=$METAL_AUTH_TOKEN \
+  --metal-auth-token=$METAL_AUTH_TOKEN \
   --metal-project-id=$METAL_PROJECT \
   foo
 ```
