@@ -12,7 +12,7 @@ This repository is [Maintained](https://github.com/packethost/standards/blob/mai
 
 ## Usage
 
-You can provision bare-metal hosts once you have built and installed the docker-machine driver. The binary will be placed in your `$PATH` directory.
+Provision bare-metal hosts by either building and installing this docker-machine driver or downloading the latest [prebuilt release asset](https://github.com/equinix/docker-machine-driver-metal/releases) for your platform. The binaries must be placed in your `$PATH`.
 
 Test that the installation worked by typing in:
 
@@ -41,7 +41,7 @@ You can find the supported arguments by running `docker-machine create -d metal 
 
 Where denoted, values may be loaded from the environment or from the `~/.config/equinix/metal.yaml` file which can be created with the [Equinix Metal CLI](https://github.com/equinix/metal-cli#metal-cli).
 
-In order to support existing installations, a Packet branded binary is also available with each release. When the `packet` binary is used, all `METAL` environment variables and `metal` arguments should be substituted for `PACKET` and `packet`, respectively.
+In order to support existing installations, a Packet branded binary is also available with each [release](https://github.com/equinix/docker-machine-driver-metal/releases) (after v0.5.0). When the `packet` binary is used, all `METAL` environment variables and `metal` arguments should be substituted for `PACKET` and `packet`, respectively.
 
 ### Example usage
 
