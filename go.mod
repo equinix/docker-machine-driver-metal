@@ -11,8 +11,7 @@ require (
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/sirupsen/logrus v1.6.0 // indirect
 	github.com/stretchr/testify v1.5.1
-	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37 // indirect
-	golang.org/x/sys v0.0.0-20200515095857-1151b9dac4a9 // indirect
+	golang.org/x/crypto v0.1.0 // indirect
 	gotest.tools v2.2.0+incompatible // indirect
 	sigs.k8s.io/yaml v1.2.0
 )
