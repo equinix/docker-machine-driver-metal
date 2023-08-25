@@ -11,15 +11,15 @@ jobs:
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@v3
         with:
           # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
           version: v1.56
       -
         name: Check GoReleaser
-        uses: goreleaser/goreleaser-action@v2
+        uses: goreleaser/goreleaser-action@v4
         with:
           version: latest
           args: check
@@ -30,8 +30,8 @@ jobs:
       matrix:
         go: [ '1.22' ]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go }}
       - run: go test -v ./...
