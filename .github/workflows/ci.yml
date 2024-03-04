@@ -16,7 +16,7 @@ jobs:
         uses: golangci/golangci-lint-action@v2
         with:
           # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
-          version: v1.30
+          version: v1.56
       -
         name: Check GoReleaser
         uses: goreleaser/goreleaser-action@v2
@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ '1.16' ]
+        go: [ '1.22' ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v1
