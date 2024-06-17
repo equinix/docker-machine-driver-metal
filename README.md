@@ -4,11 +4,8 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/equinix/docker-machine-driver-metal)](https://goreportcard.com/report/github.com/equinix/docker-machine-driver-metal)
 [![Slack](https://slack.equinixmetal.com/badge.svg)](https://slack.equinixmetal.com)
 [![Twitter Follow](https://img.shields.io/twitter/follow/equinixmetal.svg?style=social&label=Follow)](https://twitter.com/intent/follow?screen_name=equinixmetal)
-![](https://img.shields.io/badge/Stability-Maintained-green.svg)
 
 The [Equinix Metal](https://metal.equinix.com) cloud bare-metal machine driver for Docker.
-
-This repository is [Maintained](https://github.com/packethost/standards/blob/main/maintained-statement.md) meaning that this software is supported by Equinix Metal and its community - available to use in production environments.
 
 ## Usage
 
