@@ -3,10 +3,10 @@
 package metal
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
@@ -19,7 +19,8 @@ import (
 	"github.com/docker/machine/libmachine/mcnflag"
 	"github.com/docker/machine/libmachine/ssh"
 	"github.com/docker/machine/libmachine/state"
-	"github.com/packethost/packngo"
+	"github.com/equinix/equinix-sdk-go/services/metalv1"
+	metal "github.com/equinix/equinix-sdk-go/services/metalv1"
 	"sigs.k8s.io/yaml"
 )
 
@@ -99,8 +100,8 @@ type Driver struct {
 	UserDataFile            string
 	UserAgentPrefix         string
 	SpotInstance            bool
-	SpotPriceMax            float64
-	TerminationTime         *packngo.Timestamp
+	SpotPriceMax            float32
+	TerminationTime         *time.Time
 }
 
 // NewDriver is a backward compatible Driver factory method.  Using
@@ -205,7 +206,7 @@ func (d *Driver) setConfigFromFile() error {
 
 	config := metalSnakeConfig{}
 
-	if raw, err := ioutil.ReadFile(configFile); err != nil {
+	if raw, err := os.ReadFile(configFile); err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			return nil
 		}
@@ -273,11 +274,11 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 		if SpotPriceMax == "" {
 			d.SpotPriceMax = -1
 		} else {
-			SpotPriceMax, err := strconv.ParseFloat(SpotPriceMax, 64)
+			SpotPriceMax, err := strconv.ParseFloat(SpotPriceMax, 32)
 			if err != nil {
 				return err
 			}
-			d.SpotPriceMax = SpotPriceMax
+			d.SpotPriceMax = float32(SpotPriceMax)
 		}
 
 		TerminationTime := flags.String(argPrefix(argTerminationTime))
@@ -291,7 +292,8 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 			if Timestamp <= time.Now().Unix() {
 				return fmt.Errorf("--%s cannot be in the past", argPrefix(argTerminationTime))
 			}
-			d.TerminationTime = &packngo.Timestamp{Time: time.Unix(Timestamp, 0)}
+			t := time.Unix(Timestamp, 0)
+			d.TerminationTime = &t
 		}
 	}
 
@@ -338,10 +340,31 @@ func (d *Driver) PreCreateCheck() error {
 	return validateFacility(client, d.Facility)
 }
 
+type DeviceCreator interface {
+	SetPlan(string)
+	SetOperatingSystem(string)
+	SetHostname(string)
+	SetUserdata(string)
+	SetTags([]string)
+	SetHardwareReservationId(string)
+	SetBillingCycle(metalv1.DeviceCreateInputBillingCycle)
+	SetSpotInstance(bool)
+	SetSpotPriceMax(float32)
+	SetTerminationTime(time.Time)
+}
+
+type OneOfDeviceCreator interface {
+	DeviceCreator
+	GetActualInstance() interface{}
+}
+
+var _ DeviceCreator = (*metal.DeviceCreateInMetroInput)(nil)
+var _ DeviceCreator = (*metal.DeviceCreateInFacilityInput)(nil)
+
 func (d *Driver) Create() error {
 	var userdata string
 	if d.UserDataFile != "" {
-		buf, err := ioutil.ReadFile(d.UserDataFile)
+		buf, err := os.ReadFile(d.UserDataFile)
 		if err != nil {
 			return err
 		}
@@ -355,7 +378,7 @@ func (d *Driver) Create() error {
 		return err
 	}
 
-	d.SSHKeyID = key.ID
+	d.SSHKeyID = key.GetId()
 
 	hardwareReservationId := ""
 	//check if hardware reservation requested
@@ -364,32 +387,42 @@ func (d *Driver) Create() error {
 	}
 
 	client := d.getClient()
-	createRequest := &packngo.DeviceCreateRequest{
-		Hostname:              d.MachineName,
-		Plan:                  d.Plan,
-		HardwareReservationID: hardwareReservationId,
-		Metro:                 d.Metro,
-		OS:                    d.OperatingSystem,
-		BillingCycle:          d.BillingCycle,
-		ProjectID:             d.ProjectID,
-		UserData:              userdata,
-		Tags:                  d.Tags,
-		SpotInstance:          d.SpotInstance,
-		SpotPriceMax:          d.SpotPriceMax,
-		TerminationTime:       d.TerminationTime,
-	}
+
+	var dc DeviceCreator
+	var createRequest metal.CreateDeviceRequest
 
 	if d.Facility != "" {
-		createRequest.Facility = []string{d.Facility}
+		dc = &metal.DeviceCreateInFacilityInput{
+			Facility: []string{d.Facility},
+		}
+		createRequest = metal.CreateDeviceRequest{DeviceCreateInFacilityInput: dc.(*metal.DeviceCreateInFacilityInput)}
+	} else {
+		dc = &metal.DeviceCreateInMetroInput{
+			Metro: d.Metro,
+		}
+		createRequest = metal.CreateDeviceRequest{DeviceCreateInMetroInput: dc.(*metal.DeviceCreateInMetroInput)}
+	}
+
+	dc.SetHostname(d.MachineName)
+	dc.SetPlan(d.Plan)
+	dc.SetHardwareReservationId(hardwareReservationId)
+	dc.SetOperatingSystem(d.OperatingSystem)
+	dc.SetBillingCycle(metalv1.DeviceCreateInputBillingCycle(d.BillingCycle))
+	dc.SetUserdata(userdata)
+	dc.SetTags(d.Tags)
+	dc.SetSpotInstance(d.SpotInstance)
+	dc.SetSpotPriceMax(d.SpotPriceMax)
+	if d.TerminationTime != nil {
+		dc.SetTerminationTime(*d.TerminationTime)
 	}
 
 	log.Info("Provisioning Equinix Metal server...")
-	newDevice, _, err := client.Devices.Create(createRequest)
+	newDevice, _, err := client.DevicesApi.CreateDevice(context.TODO(), d.ProjectID).CreateDeviceRequest(createRequest).Execute()
 	if err != nil {
 		log.Errorf("device could not be created: %s", err)
 
 		//cleanup ssh keys if device failed
-		if _, err := client.SSHKeys.Delete(d.SSHKeyID); ignoreStatusCodes(err, http.StatusForbidden, http.StatusNotFound) != nil {
+		if resp, err := client.SSHKeysApi.DeleteSSHKey(context.TODO(), d.SSHKeyID).Execute(); ignoreStatusCodes(resp, err, http.StatusForbidden, http.StatusNotFound) != nil {
 			log.Errorf("ssh-key could not be deleted: %s", err)
 			return err
 		}
@@ -397,17 +430,17 @@ func (d *Driver) Create() error {
 	}
 	t0 := time.Now()
 
-	d.DeviceID = newDevice.ID
+	d.DeviceID = newDevice.GetId()
 
 	for {
-		newDevice, _, err = client.Devices.Get(d.DeviceID, nil)
+		newDevice, _, err = client.DevicesApi.FindDeviceById(context.TODO(), d.DeviceID).Execute()
 		if err != nil {
 			return err
 		}
 
-		for _, ip := range newDevice.Network {
-			if ip.Public && ip.AddressFamily == 4 {
-				d.IPAddress = ip.Address
+		for _, ip := range newDevice.GetIpAddresses() {
+			if ip.GetPublic() && ip.GetAddressFamily() == 4 {
+				d.IPAddress = ip.GetAddress()
 			}
 		}
 
@@ -419,22 +452,22 @@ func (d *Driver) Create() error {
 	}
 
 	log.Infof("Created device ID %s, IP address %s",
-		newDevice.ID,
+		newDevice.GetId(),
 		d.IPAddress)
 
 	log.Info("Waiting for Provisioning...")
 	stage := float32(0)
 	for {
-		newDevice, _, err = client.Devices.Get(d.DeviceID, nil)
+		newDevice, _, err = client.DevicesApi.FindDeviceById(context.TODO(), d.DeviceID).Execute()
 		if err != nil {
 			return err
 		}
-		if newDevice.State == "provisioning" && stage != newDevice.ProvisionPer {
-			stage = newDevice.ProvisionPer
-			log.Debugf("Provisioning %v%% complete", newDevice.ProvisionPer)
+		if newDevice.GetState() == metal.DEVICESTATE_PROVISIONING && stage != newDevice.GetProvisioningPercentage() {
+			stage = newDevice.GetProvisioningPercentage()
+			log.Debugf("Provisioning %v%% complete", newDevice.GetProvisioningPercentage())
 		}
-		if newDevice.State == "active" {
-			log.Debugf("Device State: %s", newDevice.State)
+		if newDevice.GetState() == metal.DEVICESTATE_ACTIVE {
+			log.Debugf("Device State: %s", newDevice.GetState())
 			break
 		}
 		time.Sleep(10 * time.Second)
@@ -450,7 +483,7 @@ func (d *Driver) Create() error {
 	return nil
 }
 
-func (d *Driver) createSSHKey() (*packngo.SSHKey, error) {
+func (d *Driver) createSSHKey() (*metal.SSHKey, error) {
 	sshKeyPath := d.GetSSHKeyPath()
 	log.Debugf("Writing SSH Key to %s", sshKeyPath)
 
@@ -458,17 +491,18 @@ func (d *Driver) createSSHKey() (*packngo.SSHKey, error) {
 		return nil, err
 	}
 
-	publicKey, err := ioutil.ReadFile(sshKeyPath + ".pub")
+	publicKey, err := os.ReadFile(sshKeyPath + ".pub")
 	if err != nil {
 		return nil, err
 	}
 
-	createRequest := &packngo.SSHKeyCreateRequest{
-		Label: fmt.Sprintf("docker machine: %s", d.MachineName),
-		Key:   string(publicKey),
-	}
+	createRequest := metal.SSHKeyCreateInput{}
+	createRequest.SetLabel(fmt.Sprintf("docker machine: %s", d.MachineName))
+	createRequest.SetKey(string(publicKey))
+	r := metal.ApiCreateSSHKeyRequest{}
+	r.SSHKeyCreateInput(createRequest)
 
-	key, _, err := d.getClient().SSHKeys.Create(createRequest)
+	key, _, err := d.getClient().SSHKeysApi.CreateSSHKeyExecute(r)
 	if err != nil {
 		return key, err
 	}
@@ -492,86 +526,91 @@ func (d *Driver) GetIP() (string, error) {
 }
 
 func (d *Driver) GetState() (state.State, error) {
-	device, _, err := d.getClient().Devices.Get(d.DeviceID, nil)
+	device, _, err := d.getClient().DevicesApi.FindDeviceById(context.TODO(), d.DeviceID).Execute()
 	if err != nil {
 		return state.Error, err
 	}
 
-	switch device.State {
-	case "queued", "provisioning", "powering_on":
+	switch device.GetState() {
+	case metal.DEVICESTATE_QUEUED, metal.DEVICESTATE_PROVISIONING, metal.DEVICESTATE_POWERING_ON:
 		return state.Starting, nil
-	case "active":
+	case metal.DEVICESTATE_ACTIVE:
 		return state.Running, nil
-	case "powering_off":
+	case metal.DEVICESTATE_POWERING_OFF:
 		return state.Stopping, nil
-	case "inactive":
+	case metal.DEVICESTATE_INACTIVE:
 		return state.Stopped, nil
 	}
 	return state.None, nil
 }
 
 func (d *Driver) Start() error {
-	_, err := d.getClient().Devices.PowerOn(d.DeviceID)
+	r := metal.DeviceActionInput{Type: metal.DEVICEACTIONINPUTTYPE_POWER_ON}
+	_, err := d.getClient().DevicesApi.PerformAction(context.TODO(), d.DeviceID).DeviceActionInput(r).Execute()
 	return err
 }
 
 func (d *Driver) Stop() error {
-	_, err := d.getClient().Devices.PowerOff(d.DeviceID)
+	r := metal.DeviceActionInput{Type: metal.DEVICEACTIONINPUTTYPE_POWER_OFF}
+	_, err := d.getClient().DevicesApi.PerformAction(context.TODO(), d.DeviceID).DeviceActionInput(r).Execute()
 	return err
 }
 
-func ignoreStatusCodes(err error, codes ...int) error {
-	e, ok := err.(*packngo.ErrorResponse)
-	if !ok || e.Response == nil {
-		return err
+func ignoreStatusCodes(resp *http.Response, err error, codes ...int) error {
+	if err == nil && resp == nil {
+		return nil
 	}
-
-	for _, c := range codes {
-		if e.Response.StatusCode == c {
-			return nil
+	if err != nil {
+		for _, c := range codes {
+			if resp.StatusCode == c {
+				return nil
+			}
 		}
 	}
+
 	return err
 }
 
 func (d *Driver) Remove() error {
 	client := d.getClient()
-	if _, err := client.SSHKeys.Delete(d.SSHKeyID); ignoreStatusCodes(err, http.StatusForbidden, http.StatusNotFound) != nil {
+	if resp, err := client.SSHKeysApi.DeleteSSHKey(context.TODO(), d.SSHKeyID).Execute(); ignoreStatusCodes(resp, err, http.StatusForbidden, http.StatusNotFound) != nil {
 		return err
 	}
 
-	_, err := client.Devices.Delete(d.DeviceID, false)
-	return ignoreStatusCodes(err, http.StatusForbidden, http.StatusNotFound)
+	resp, err := client.DevicesApi.DeleteDevice(context.TODO(), d.DeviceID).Execute()
+	return ignoreStatusCodes(resp, err, http.StatusForbidden, http.StatusNotFound)
 }
 
 func (d *Driver) Restart() error {
-	_, err := d.getClient().Devices.Reboot(d.DeviceID)
+	r := metal.DeviceActionInput{Type: metal.DEVICEACTIONINPUTTYPE_REBOOT}
+	_, err := d.getClient().DevicesApi.PerformAction(context.TODO(), d.DeviceID).DeviceActionInput(r).Execute()
 	return err
 }
 
 func (d *Driver) Kill() error {
-	_, err := d.getClient().Devices.PowerOff(d.DeviceID)
-	return err
+	return d.Stop()
 }
 
 func (d *Driver) GetDockerConfigDir() string {
 	return dockerConfigDir
 }
 
-func (d *Driver) getClient() *packngo.Client {
-	client := packngo.NewClientWithAuth(consumerToken, d.ApiKey, nil)
-	userAgent := fmt.Sprintf("docker-machine-driver-%s/%s %s", d.DriverName(), version, client.UserAgent)
-
+func (d *Driver) getClient() *metal.APIClient {
+	config := metal.NewConfiguration()
+	config.AddDefaultHeader("X-Consumer-Token", consumerToken)
+	config.AddDefaultHeader("X-Auth-Token", d.ApiKey)
+	userAgent := fmt.Sprintf("docker-machine-driver-%s/%s %s", d.DriverName(), version, config.UserAgent)
 	if len(d.UserAgentPrefix) > 0 {
 		userAgent = fmt.Sprintf("%s %s", d.UserAgentPrefix, userAgent)
 	}
+	config.UserAgent = userAgent
+	client := metal.NewAPIClient(config)
 
-	client.UserAgent = userAgent
 	return client
 }
 
 func (d *Driver) getOsFlavors() ([]string, error) {
-	operatingSystems, _, err := d.getClient().OperatingSystems.List()
+	operatingSystems, _, err := d.getClient().OperatingSystemsApi.FindOperatingSystems(context.TODO()).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -584,26 +623,26 @@ func (d *Driver) getOsFlavors() ([]string, error) {
 		"rancher",
 		"ubuntu",
 	}
-	flavors := make([]string, 0, len(operatingSystems))
-	for _, flavor := range operatingSystems {
-		if stringInSlice(flavor.Distro, supportedDistros) {
-			flavors = append(flavors, flavor.Slug)
+	flavors := make([]string, 0, len(operatingSystems.OperatingSystems))
+	for _, flavor := range operatingSystems.OperatingSystems {
+		if stringInSlice(flavor.GetDistro(), supportedDistros) {
+			flavors = append(flavors, flavor.GetSlug())
 		}
 	}
 	return flavors, nil
 }
 
-func validateFacility(client *packngo.Client, facility string) error {
+func validateFacility(client *metal.APIClient, facility string) error {
 	if facility == "any" {
 		return nil
 	}
 
-	facilities, _, err := client.Facilities.List(nil)
+	facilities, _, err := client.FacilitiesApi.FindFacilities(context.TODO()).Execute()
 	if err != nil {
 		return err
 	}
-	for _, f := range facilities {
-		if f.Code == facility {
+	for _, f := range facilities.Facilities {
+		if f.GetCode() == facility {
 			return nil
 		}
 	}
@@ -611,13 +650,13 @@ func validateFacility(client *packngo.Client, facility string) error {
 	return fmt.Errorf("%s requires a valid facility", driverName)
 }
 
-func validateMetro(client *packngo.Client, metro string) error {
-	metros, _, err := client.Metros.List(nil)
+func validateMetro(client *metal.APIClient, metro string) error {
+	metros, _, err := client.MetrosApi.FindMetros(context.TODO()).Execute()
 	if err != nil {
 		return err
 	}
-	for _, m := range metros {
-		if m.Code == metro {
+	for _, m := range metros.Metros {
+		if m.GetCode() == metro {
 			return nil
 		}
 	}
