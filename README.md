@@ -6,6 +6,9 @@
 
 The [Equinix Metal](https://metal.equinix.com) cloud bare-metal machine driver for Docker.
 
+# Note
+With the upcoming EoL of Equinix Metal on June 30, 2026, this repo is being archived on February 28, 2026.
+
 ## Usage
 
 Provision bare-metal hosts by either building and installing this docker-machine driver or downloading the latest [prebuilt release asset](https://github.com/equinix/docker-machine-driver-metal/releases) for your platform. The binaries must be placed in your `$PATH`.
