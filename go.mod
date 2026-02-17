@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/carmo-evan/strtotime v0.0.0-20200108203155-3136cf889e3b
 	github.com/docker/machine v0.16.2
-	github.com/equinix/equinix-sdk-go v0.41.0
+	github.com/equinix/equinix-sdk-go v0.63.0
 	github.com/stretchr/testify v1.9.0
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -19,5 +19,6 @@ require (
 	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/term v0.15.0 // indirect
+	gopkg.in/validator.v2 v2.0.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
