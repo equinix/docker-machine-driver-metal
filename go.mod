@@ -6,7 +6,7 @@ require (
 	github.com/carmo-evan/strtotime v0.0.0-20200108203155-3136cf889e3b
 	github.com/docker/machine v0.16.2
 	github.com/equinix/equinix-sdk-go v0.41.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.11.1
 	sigs.k8s.io/yaml v1.4.0
 )
 
